@@ -1,17 +1,27 @@
 {
   "name": "ember-key-manager",
   "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "A service for (un)binding key up and down events.",
   "keywords": [
-    "ember-addon"
+    "ember-addon",
+    "keyboard",
+    "key",
+    "keyboard events",
+    "key events",
+    "key combos",
+    "keyboard shortcuts",
+    "key bindings"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "Patrick Berkeley <patrick@icarus.works>",
+  "contributors": [
+    "Jordan Morano <jordan@icarus.works>"
+  ],
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
+  "repository": "https://github.com/IcarusWorks/ember-key-manager",
   "scripts": {
     "build": "ember build",
     "start": "ember server",
@@ -31,16 +41,13 @@
     "ember-cli-inject-live-reload": "^1.4.1",
     "ember-cli-jshint": "^2.0.1",
     "ember-cli-qunit": "^3.0.1",
-    "ember-cli-release": "^0.2.9",
+    "ember-cli-release": "0.2.9",
     "ember-cli-sri": "^2.1.0",
     "ember-cli-test-loader": "^1.1.0",
     "ember-cli-uglify": "^1.2.0",
-    "ember-data": "^2.10.0",
-    "ember-disable-prototype-extensions": "^1.1.0",
     "ember-export-application-global": "^1.0.5",
     "ember-load-initializers": "^0.5.1",
     "ember-resolver": "^2.0.3",
-    "ember-welcome-page": "^1.0.3",
     "loader.js": "^4.0.10"
   },
   "engines": {
