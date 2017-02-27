@@ -1,6 +1,17 @@
 # ember-key-manager
 
-This README outlines the details of collaborating on this Ember addon.
+[![NPM release][npm-badge]][npm-badge-url]
+[![Build][travis-badge]][travis-badge-url]
+[![Ember Observer][ember-observer-badge]][ember-observer-badge-url]
+
+[npm-badge]: https://img.shields.io/npm/v/{{ember-key-manager}}.svg
+[npm-badge-url]: https://www.npmjs.com/package/{{ember-key-manager}}
+[travis-badge]: https://img.shields.io/travis/{{patrickberkeley}}/{{ember-key-manager}}/master.svg?label=TravisCI
+[travis-badge-url]: https://travis-ci.org/{{patrickberkeley}}/{{ember-key-manager}}
+[ember-observer-badge]: http://emberobserver.com/badges/{{ember-key-manager}}.svg
+[ember-observer-badge-url]: http://emberobserver.com/addons/{{ember-key-manager}}
+
+A service for (un)binding keyboard up and down events.
 
 ## Installation
 
