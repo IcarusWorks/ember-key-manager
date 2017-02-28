@@ -86,7 +86,7 @@ export default Ember.Component.extend({
 
   willDestroyElement() {
     get(this, 'keyManager').deregister({
-      name: 'search', // This name must match the name the binding was registered with above.
+      name: 'search-modal', // This name must match the name the binding was registered with above.
     });
   },
 
