@@ -6,7 +6,7 @@
 
 [npm-badge]: https://img.shields.io/npm/v/ember-key-manager.svg
 [npm-badge-url]: https://www.npmjs.com/package/ember-key-manager
-[travis-badge]: https://img.shields.io/travis/IcarusWorks/ember-key-manager/master.svg?label=TravisCI
+[travis-badge]: https://travis-ci.org/IcarusWorks/ember-key-manager.svg?branch=master
 [travis-badge-url]: https://travis-ci.org/IcarusWorks/ember-key-manager
 [ember-observer-badge]: http://emberobserver.com/badges/ember-key-manager.svg
 [ember-observer-badge-url]: http://emberobserver.com/addons/ember-key-manager
