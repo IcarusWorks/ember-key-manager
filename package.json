@@ -1,6 +1,6 @@
 {
   "name": "ember-key-manager",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A service for (un)binding key up and down events.",
   "keywords": [
     "ember-addon",
