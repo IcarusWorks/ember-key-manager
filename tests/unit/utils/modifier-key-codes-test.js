@@ -6,7 +6,7 @@ module('Unit | Utility | modifier key codes');
 test('modifiers are defined', function(assert) {
   assert.expect(1);
 
-  const result = modifierKeyCodes;
+  const result = modifierKeyCodes.compact();
   assert.equal(
     result.length,
     7,
