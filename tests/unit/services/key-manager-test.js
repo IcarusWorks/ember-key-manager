@@ -4,10 +4,24 @@ import keyCodes from '../../../utils/key-codes';
 
 const {
   get,
+  run,
   set,
 } = Ember;
+const config = {
+  disableOnInput: false,
+};
+const inputElements = [
+  'input',
+  'textarea',
+  'select',
+];
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
+  beforeEach() {
+    Ember.getOwner(this).register('main:key-manager-config', config, {
+      instantiate: false,
+    });
+  },
 });
 
 test('handler() executes callback only if event has highest priority', function(assert) {
@@ -224,4 +238,56 @@ test('clears execution keys', function(assert) {
     [keyCodes.shift],
     'execution keys should be cleared'
   );
+});
+
+test('sets defaults on init', function(assert) {
+  assert.expect(1);
+
+  const config = Ember.getOwner(this).lookup('main:key-manager-config');
+  set(config, 'disableOnInput', true);
+
+  const service = this.subject();
+  assert.ok(get(service, 'disableOnInput'), 'disableOnInput is true from config.');
+});
+
+test('disableOnInput disables callback if focused on input', function(assert) {
+  assert.expect(1);
+  const done = assert.async();
+
+  const service = this.subject();
+  const combo = {
+    callback() {
+      assert.ok(true, 'callback is invoked only once.');
+    },
+    eventName: 'some.eventName.1',
+    keys: [
+      'enter',
+    ],
+    disableOnInput: true,
+    priority: 0,
+  };
+  const combos = [
+    combo,
+  ];
+
+  set(service, 'combos', combos);
+
+  const enterEvent = {
+    data: {
+      eventName: 'some.eventName.1',
+    },
+    keyCode: keyCodes.enter,
+  };
+
+  service.handler(enterEvent);
+
+  inputElements.forEach((e, i) => {
+    $().add('input').focus();
+    run.next(() => {
+      service.handler(enterEvent);
+      if (i === (inputElements.length - 1)) {
+        done();
+      }
+    });
+  });
 });

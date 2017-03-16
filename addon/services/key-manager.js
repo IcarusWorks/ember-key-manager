@@ -5,17 +5,26 @@ import modifierKeyCodes from '../utils/modifier-key-codes';
 const {
   $,
   get,
+  getOwner,
   run,
   set,
+  setProperties,
 } = Ember;
-
 const eventNamespace = 'key-manager';
+const inputElements = [
+  'input',
+  'textarea',
+  'select',
+];
 
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
   executionKeyClearInterval: 2000,
   matchFound: false,
   uid: 0,
+
+  // config options
+  disableOnInput: false,
 
   init() {
     this._super(...arguments);
@@ -26,9 +35,12 @@ export default Ember.Service.extend({
       run.bind(this, this._handleVisibilityChange)
     );
     this._clearExecutionKeysOnInterval();
+    this._registerConfig();
   },
 
-  register({keys, name, selector=$(document), downCallback, upCallback, priority=0}) {
+  register({keys, name, selector=$(document), downCallback, upCallback, priority=0, disableOnInput}) {
+    disableOnInput = disableOnInput || get(this, 'disableOnInput');
+
     ['up', 'down'].forEach((direction) => {
       const uid = get(this, 'uid');
       const callback = direction === 'up' ? upCallback : downCallback;
@@ -42,6 +54,7 @@ export default Ember.Service.extend({
         selector,
         priority,
         uid,
+        disableOnInput,
       };
 
       get(this, 'combos').pushObject(combo);
@@ -87,10 +100,12 @@ export default Ember.Service.extend({
           set(this, 'matchFound', false);
         });
 
-        const callback = get(combo, 'callback');
-
-        if (callback) {
-          callback(event);
+        const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
+        if (!get(combo, 'disableOnInput') || isNotOnInput) {
+          const callback = get(combo, 'callback');
+          if (callback) {
+            callback(event);
+          }
         }
       }
     }
@@ -172,5 +187,12 @@ export default Ember.Service.extend({
       this._clearExecutionKeys(true);
     }, interval);
     set(this, 'clearExecutionKeysLater', clearLater);
+  },
+
+  _registerConfig() {
+    const config = getOwner(this).lookup('main:key-manager-config');
+    if (config) {
+      setProperties(this, config);
+    }
   },
 });
