@@ -8,14 +8,14 @@ const {
   set,
 } = Ember;
 const config = {
-  emberKeyManagerDefaults: {
-    disableOnInput: false,
-  },
+  disableOnInput: false,
 };
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
   beforeEach() {
-    Ember.getOwner(this).register('main:config', config, {instantiate: false});
+    Ember.getOwner(this).register('main:key-manager-config', config, {
+      instantiate: false,
+    });
   },
 });
 
@@ -238,8 +238,8 @@ test('clears execution keys', function(assert) {
 test('sets defaults on init', function(assert) {
   assert.expect(1);
 
-  const config = Ember.getOwner(this).lookup('main:config');
-  set(config, 'emberKeyManagerDefaults.disableOnInput', true);
+  const config = Ember.getOwner(this).lookup('main:key-manager-config');
+  set(config, 'disableOnInput', true);
 
   const service = this.subject();
   assert.ok(get(service, 'disableOnInput'), 'disableOnInput is true from config.');

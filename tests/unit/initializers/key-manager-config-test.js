@@ -1,9 +1,9 @@
 import Ember from 'ember';
-import { initialize } from 'dummy/initializers/config';
+import { initialize } from 'dummy/initializers/key-manager-config';
 import { module, test } from 'qunit';
 import destroyApp from '../../helpers/destroy-app';
 
-module('Unit | Initializer | config', {
+module('Unit | Initializer | key manager config', {
   beforeEach() {
     Ember.run(() => {
       this.application = Ember.Application.create();
@@ -15,11 +15,11 @@ module('Unit | Initializer | config', {
   }
 });
 
-test('it registers the app config', function(assert) {
+test('it registers the config', function(assert) {
   assert.expect(1);
 
   initialize(this.application);
 
-  const config = this.application.__container__.lookup('main:config');
+  const config = this.application.__container__.lookup('main:key-manager-config');
   assert.ok(!!config, 'config is registered on the container.');
 });

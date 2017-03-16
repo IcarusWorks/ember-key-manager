@@ -186,10 +186,9 @@ export default Ember.Service.extend({
   },
 
   _registerConfig() {
-    const config = getOwner(this).lookup('main:config');
+    const config = getOwner(this).lookup('main:key-manager-config');
     if (config) {
-      const defaults = get(config, 'emberKeyManagerDefaults') || {};
-      setProperties(this, defaults);
+      setProperties(this, config);
     }
   },
 });
