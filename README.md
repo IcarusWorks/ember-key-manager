@@ -25,14 +25,21 @@ Bind key event anywhere services are available e.g., routes, models, controllers
 
 Set global options in a `keyManagerConfig` object on the application's environment.
 
+```javascript
+  keyManagerConfig: {
+    disableOnInput: true
+  }
+```
+
 #### `disableOnInput`
 
 Defaults to false. Set the global option to true to change the default. This can still
 be overridden by passing in the flag on the `register` method.
 
+
 ### Public Methods
 
-#### `register({keys, name, selector=$(document), downCallback, upCallback, priority=0})`
+#### `register({keys, name, selector=$(document), downCallback, upCallback, priority=0, disableOnInput})`
 
 Accepts an object with the following attributes:
 
