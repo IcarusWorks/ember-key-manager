@@ -10,8 +10,12 @@ const {
   set,
   setProperties,
 } = Ember;
-
 const eventNamespace = 'key-manager';
+const inputElements = [
+  'input',
+  'textarea',
+  'select',
+];
 
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
@@ -96,7 +100,7 @@ export default Ember.Service.extend({
           set(this, 'matchFound', false);
         });
 
-        const isNotOnInput = !$(document.activeElement).is('input');
+        const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
         if (!get(combo, 'disableOnInput') || isNotOnInput) {
           const callback = get(combo, 'callback');
           if (callback) {

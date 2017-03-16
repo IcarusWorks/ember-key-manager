@@ -10,6 +10,11 @@ const {
 const config = {
   disableOnInput: false,
 };
+const inputElements = [
+  'input',
+  'textarea',
+  'select',
+];
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
   beforeEach() {
@@ -276,9 +281,13 @@ test('disableOnInput disables callback if focused on input', function(assert) {
 
   service.handler(enterEvent);
 
-  $().add('input').focus();
-  run.next(() => {
-    service.handler(enterEvent);
-    done();
+  inputElements.forEach((e, i) => {
+    $().add('input').focus();
+    run.next(() => {
+      service.handler(enterEvent);
+      if (i === (inputElements.length - 1)) {
+        done();
+      }
+    });
   });
 });

@@ -21,6 +21,15 @@ A service for (un)binding keyboard up and down events.
 
 Bind key event anywhere services are available e.g., routes, models, controllers, components.
 
+### Config
+
+Set global options in a `keyManagerConfig` object on the application's environment.
+
+#### `disableOnInput`
+
+Defaults to false. Set the global option to true to change the default. This can still
+be overridden by passing in the flag on the `register` method.
+
 ### Public Methods
 
 #### `register({keys, name, selector=$(document), downCallback, upCallback, priority=0})`
@@ -35,6 +44,7 @@ Accepts an object with the following attributes:
 | `downCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keydown event is fired. |
 | `upCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keyup event is fired. |
 | `priority`     | integer | No      | `0` | An integer used to prioritize shortcuts should the shortcuts with the same `keys` be bound at the same time. For example, you bind the `escape` key on a route and the route's template renders a component that also binds the `escape` key. Highest priority takes precedence. |
+| `disableOnInput`     | boolean | No      | `false` | A boolean to determine whether the callback should be fired when an input element is active. Input elements include input, select, and textarea.
 
 #### `deregister({name})`
 
