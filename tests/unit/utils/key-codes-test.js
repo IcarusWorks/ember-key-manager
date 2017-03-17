@@ -9,7 +9,7 @@ test('keycodes are defined', function(assert) {
   const result = keyCodes;
   assert.equal(
     Object.keys(result).length,
-    160,
+    162,
     'codes are defined'
   );
 });

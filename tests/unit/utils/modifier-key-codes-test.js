@@ -9,7 +9,7 @@ test('modifiers are defined', function(assert) {
   const result = modifierKeyCodes.compact();
   assert.equal(
     result.length,
-    7,
+    10,
     'codes are defined'
   );
 });

@@ -71,10 +71,12 @@ const all = {
   y: 89,
   z: 90,
 
-  windowLeft: 91,
   cmd: 91,
-  windowRight: 92,
+  meta: 91,
+  windowLeft: 91,
+  metaRight: 92,
   cmdRight: 92,
+  windowRight: 92,
   contextMenu: 93,
 
   numpad0: 96,
