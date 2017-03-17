@@ -23,12 +23,12 @@ Bind key event anywhere services are available e.g., routes, models, controllers
 
 ### Config
 
-Set global options in a `keyManagerConfig` object on the application's environment.
+Set global options in a `keyManagerConfig` object in your application's `config/environment.js`:
 
-```javascript
+```js
   keyManagerConfig: {
-    disableOnInput: true
-  }
+    disableOnInput: true,
+  },
 ```
 
 #### `disableOnInput`
@@ -45,13 +45,13 @@ Accepts an object with the following attributes:
 
 | Name       | Type          | Required | Default  | Description
 | ---------- | ------------- | -------- | -------- | --------- |
-| `keys`     | array of strings | Yes      | `<none>` | An array of keys that comprise the shortcut e.g., `['cmd', 'enter']`. `keys` can contain one or more modifier keys and _must_ contain at least one non-modifier key. |
+| `keys`     | array of strings | Yes      | `<none>` | An array of keys that comprise the shortcut e.g., `['cmd', 'enter']`. If `keys` contains multiple modifier keys, they still comprise one shortcut e.g., `['cmd', 'shift', 'enter']` is a single shortcut that executes when all three of those keys are pressed. |
 | `name`     | string | Yes      | `<none>` | A unique string by which you can identify – and `deregister` – the shortcut. |
 | `selector`     | jQuery selector | No      | `$(document)` | A jQuery selector by which to scope the shortcut. |
 | `downCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keydown event is fired. |
 | `upCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keyup event is fired. |
 | `priority`     | integer | No      | `0` | An integer used to prioritize shortcuts should the shortcuts with the same `keys` be bound at the same time. For example, you bind the `escape` key on a route and the route's template renders a component that also binds the `escape` key. Highest priority takes precedence. |
-| `disableOnInput`     | boolean | No      | `false` | A boolean to determine whether the callback should be fired when an input element is active. Input elements include input, select, and textarea.
+| `disableOnInput`     | boolean | No      | `false` | A boolean to determine whether the callback should be fired when an `input`, `textarea`, or `select` element is active.
 
 #### `deregister({name})`
 
@@ -63,17 +63,9 @@ Accepts an object with the following attribute:
 
 ### Key Names
 
-The list of the possible key names can be [found here](https://github.com/IcarusWorks/ember-key-manager/blob/master/addon/utils/key-codes.js). The modifier keys – those that don't trigger a shortcut to execute – are:
+The full list of key names can be [found here](https://github.com/IcarusWorks/ember-key-manager/blob/master/addon/utils/key-codes.js).
 
-```
-altLeft
-cmd
-contextMenu
-control
-shift
-windowLeft
-windowRight
-```
+The modifier keys – those that don't trigger execution of a shortcut – can be [found here](https://github.com/IcarusWorks/ember-key-manager/blob/master/addon/utils/modifier-key-codes.js).
 
 ### Examples
 
