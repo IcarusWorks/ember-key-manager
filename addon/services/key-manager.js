@@ -15,6 +15,7 @@ const inputElements = [
   'input',
   'textarea',
   'select',
+  "[contenteditable='true']"
 ];
 
 export default Ember.Service.extend({

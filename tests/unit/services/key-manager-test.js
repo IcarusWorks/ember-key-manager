@@ -14,6 +14,7 @@ const inputElements = [
   'input',
   'textarea',
   'select',
+  "[contenteditable='true']"
 ];
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
