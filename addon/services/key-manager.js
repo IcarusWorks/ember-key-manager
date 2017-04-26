@@ -15,7 +15,7 @@ const inputElements = [
   'input',
   'textarea',
   'select',
-  "[contenteditable='true']"
+  "[contenteditable='true']",
 ];
 
 export default Ember.Service.extend({
@@ -33,8 +33,12 @@ export default Ember.Service.extend({
     this._resetDownKeys();
     document.addEventListener(
       'visibilitychange',
-      run.bind(this, this._handleVisibilityChange)
+      run.bind(this, this._handleVisibilityChange),
+      false
     );
+    window.onblur = () => {
+      this._resetDownKeys();
+    };
     this._clearExecutionKeysOnInterval();
     this._registerConfig();
   },
