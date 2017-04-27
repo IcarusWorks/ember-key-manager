@@ -17,12 +17,22 @@ const inputElements = [
   'select',
   "[contenteditable='true']",
 ];
+const controlKeys = [
+  'control',
+  'ctrl',
+];
+const metaKeys = [
+  'meta',
+  'cmd',
+];
 
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
   executionKeyClearInterval: 2000,
   matchFound: false,
   uid: 0,
+  ctrlKey: false,
+  metaKey: false,
 
   // config options
   disableOnInput: false,
@@ -92,7 +102,15 @@ export default Ember.Service.extend({
 
     const { data } = event;
 
-    get(this, 'downKeys').addObject(event.keyCode);
+    // Manage control and meta through event
+    const isControl = event.keyCode === keyCodes.control;
+    const isMeta = event.keyCode === keyCodes.meta;
+    if (!isControl && !isMeta) {
+      get(this, 'downKeys').addObject(event.keyCode);
+    }
+
+    set(this, 'ctrlKey', event.ctrlKey);
+    set(this, 'metaKey', event.metaKey);
 
     if (data) {
       const { eventName } = data;
@@ -157,11 +175,21 @@ export default Ember.Service.extend({
   _combosWithKeys(combos) {
     const downKeys = get(this, 'downKeys');
     return combos.filter((combo) => {
-      const keys = get(combo, 'keys');
+      const keys = get(combo, 'keys').slice();
+
+      const verifyMeta = !metaKeys.any(k => keys.includes(k)) || get(this, 'metaKey');
+      const verifyControl = !controlKeys.any(k => keys.includes(k)) || get(this, 'ctrlKey');
+      keys.removeObjects(metaKeys.slice().concat(controlKeys));
+
       const sameLength = keys.length === downKeys.length;
-      return sameLength && keys.every((key) => {
+      const isMatch = keys.every((key) => {
         return downKeys.includes(keyCodes[key]);
       });
+
+      return sameLength &&
+        isMatch &&
+        verifyMeta &&
+        verifyControl;
     });
   },
 
