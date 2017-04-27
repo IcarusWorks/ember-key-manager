@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import keyCodes from '../utils/key-codes';
+import modifierKeys from '../utils/modifier-keys';
 import modifierKeyCodes from '../utils/modifier-key-codes';
 
 const {
@@ -17,14 +18,6 @@ const inputElements = [
   'select',
   "[contenteditable='true']",
 ];
-const controlKeys = [
-  'control',
-  'ctrl',
-];
-const metaKeys = [
-  'meta',
-  'cmd',
-];
 
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
@@ -41,15 +34,6 @@ export default Ember.Service.extend({
     this._super(...arguments);
     set(this, 'combos', []);
     this._resetDownKeys();
-    document.addEventListener(
-      'visibilitychange',
-      run.bind(this, this._handleVisibilityChange),
-      false
-    );
-    window.onblur = () => {
-      this._resetDownKeys();
-    };
-    this._clearExecutionKeysOnInterval();
     this._registerConfig();
   },
 
@@ -99,18 +83,19 @@ export default Ember.Service.extend({
     if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
       return;
     }
+    const {
+      data,
+      keyCode,
+    } = event;
 
-    const { data } = event;
-
-    // Manage control and meta through event
-    const isControl = event.keyCode === keyCodes.control;
-    const isMeta = event.keyCode === keyCodes.meta;
-    if (!isControl && !isMeta) {
-      get(this, 'downKeys').addObject(event.keyCode);
+    if (!modifierKeyCodes.includes(keyCode)) {
+      get(this, 'downKeys').addObject(keyCode);
     }
 
-    set(this, 'ctrlKey', event.ctrlKey);
-    set(this, 'metaKey', event.metaKey);
+    modifierKeys.forEach((key) => {
+      const prop = `${key}Key`;
+      set(this, prop, event[prop]);
+    });
 
     if (data) {
       const { eventName } = data;
@@ -140,7 +125,7 @@ export default Ember.Service.extend({
     this._clearExecutionKeys();
   },
 
-  _clearExecutionKeys(onInterval) {
+  _clearExecutionKeys() {
     const executionKeys = Object.keys(keyCodes).map((key) => {
         return keyCodes[key];
       })
@@ -148,10 +133,6 @@ export default Ember.Service.extend({
         return modifierKeyCodes.includes(code);
       });
     get(this, 'downKeys').removeObjects(executionKeys);
-
-    if (onInterval) {
-      this._clearExecutionKeysOnInterval();
-    }
   },
 
   _findComboByName(eventName) {
@@ -177,9 +158,10 @@ export default Ember.Service.extend({
     return combos.filter((combo) => {
       const keys = get(combo, 'keys').slice();
 
-      const verifyMeta = !metaKeys.any(k => keys.includes(k)) || get(this, 'metaKey');
-      const verifyControl = !controlKeys.any(k => keys.includes(k)) || get(this, 'ctrlKey');
-      keys.removeObjects(metaKeys.slice().concat(controlKeys));
+      const verifyModifiers = modifierKeys.every((key) => {
+        return !keys.includes(key) || get(this, `${key}Key`);
+      });
+      keys.removeObjects(modifierKeys);
 
       const sameLength = keys.length === downKeys.length;
       const isMatch = keys.every((key) => {
@@ -188,38 +170,12 @@ export default Ember.Service.extend({
 
       return sameLength &&
         isMatch &&
-        verifyMeta &&
-        verifyControl;
+        verifyModifiers;
     });
   },
 
-  _handleVisibilityChange() {
-    if (document.visibilityState === 'hidden') {
-      this._resetDownKeys();
-    }
-  },
-
   _resetDownKeys() {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
-      return;
-    }
-
     set(this, 'downKeys', []);
-  },
-
-  _clearExecutionKeysOnInterval() {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
-      return;
-    }
-
-    const previousLater = get(this, 'clearExecutionKeysLater');
-    run.cancel(previousLater);
-
-    const interval = get(this, 'executionKeyClearInterval');
-    const clearLater = run.later(() => {
-      this._clearExecutionKeys(true);
-    }, interval);
-    set(this, 'clearExecutionKeysLater', clearLater);
   },
 
   _registerConfig() {

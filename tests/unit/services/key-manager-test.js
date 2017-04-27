@@ -1,6 +1,7 @@
 import { moduleFor, test } from 'ember-qunit';
 import Ember from 'ember';
 import keyCodes from '../../../utils/key-codes';
+import modifierKeys from '../../../utils/modifier-keys';
 
 const {
   get,
@@ -225,13 +226,9 @@ test('deregister()', function(assert) {
 });
 
 test('clears execution keys', function(assert) {
-  assert.expect(3);
+  assert.expect(1);
 
-  const service = this.subject({
-    _clearExecutionKeysOnInterval() {
-      assert.ok(true, 'start interval called once on init, once on clear execution');
-    },
-  });
+  const service = this.subject();
   set(service, 'downKeys', [keyCodes.p, keyCodes.a, keyCodes.l, keyCodes.shift]);
   service._clearExecutionKeys(true);
   assert.deepEqual(
@@ -293,50 +290,40 @@ test('disableOnInput disables callback if focused on input', function(assert) {
   });
 });
 
-test('handles meta and control keys correctly', function(assert) {
-  assert.expect(2);
+test('handles modifierKeys', function(assert) {
+  assert.expect(4);
+
+  function reset(event) {
+    modifierKeys.forEach(k => set(event, `${k}Key`, false));
+  }
 
   const service = this.subject();
-  const combos = [
-    {
-      eventName: 'some.eventName',
-      keys: [
-        'control',
-        'k',
-      ],
-      callback() {
-        assert.ok(true, 'control event is called.');
-      },
-      priority: 0,
-    },
-    {
-      eventName: 'some.eventName',
-      keys: [
-        'cmd',
-        'k',
-      ],
-      callback() {
-        assert.ok(true, 'meta event is called.');
-      },
-      priority: 0,
-    },
-  ];
-  set(service, 'combos', combos);
-
   const event = {
     data: {
       eventName: 'some.eventName',
     },
     keyCode: keyCodes.k,
-    ctrlKey: false,
-    metaKey: false,
   };
 
   service.handler(event);
-  set(event, 'ctrlKey', true);
-  service.handler(event);
-  set(service, 'matchFound', false);
-  set(event, 'ctrlKey', false);
-  set(event, 'metaKey', true);
-  service.handler(event);
+  modifierKeys.forEach((key) => {
+    const combos = [
+      {
+        eventName: 'some.eventName',
+        keys: [
+          key,
+          'k',
+        ],
+        callback() {
+          assert.ok(true, 'event is called.');
+        },
+        priority: 0,
+      },
+    ];
+    set(service, 'combos', combos);
+    set(service, 'matchFound', false);
+    reset(event);
+    set(event, `${key}Key`, true);
+    service.handler(event);
+  });
 });
