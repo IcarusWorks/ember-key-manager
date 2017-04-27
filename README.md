@@ -45,7 +45,7 @@ Accepts an object with the following attributes:
 
 | Name       | Type          | Required | Default  | Description
 | ---------- | ------------- | -------- | -------- | --------- |
-| `keys`     | array of strings | Yes      | `<none>` | An array of keys that comprise the shortcut e.g., `['cmd', 'enter']`. If `keys` contains multiple modifier keys, they still comprise one shortcut e.g., `['cmd', 'shift', 'enter']` is a single shortcut that executes when all three of those keys are pressed. |
+| `keys`     | array of strings | Yes      | `<none>` | An array of keys that comprise the shortcut e.g., `['meta', 'enter']`. If `keys` contains multiple modifier keys, they still comprise one shortcut e.g., `['meta', 'shift', 'enter']` is a single shortcut that executes when all three of those keys are pressed. |
 | `name`     | string | Yes      | `<none>` | A unique string by which you can identify – and `deregister` – the shortcut. |
 | `selector`     | jQuery selector | No      | `$(document)` | A jQuery selector by which to scope the shortcut. |
 | `downCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keydown event is fired. |

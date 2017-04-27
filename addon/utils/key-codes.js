@@ -6,7 +6,7 @@ const all = {
   numLockMac: 12,
   enter: 13,
   shift: 16,
-  control: 17,
+  ctrl: 17,
   alt: 18,
   pause: 19,
   capsLock: 20,
@@ -71,9 +71,7 @@ const all = {
   y: 89,
   z: 90,
 
-  cmd: 91,
   meta: 91,
-  windowLeft: 91,
   metaRight: 92,
   cmdRight: 92,
   windowRight: 92,

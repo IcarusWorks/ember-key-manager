@@ -1,6 +1,7 @@
 import { moduleFor, test } from 'ember-qunit';
 import Ember from 'ember';
 import keyCodes from '../../../utils/key-codes';
+import modifierKeys from '../../../utils/modifier-keys';
 
 const {
   get,
@@ -225,13 +226,9 @@ test('deregister()', function(assert) {
 });
 
 test('clears execution keys', function(assert) {
-  assert.expect(3);
+  assert.expect(1);
 
-  const service = this.subject({
-    _clearExecutionKeysOnInterval() {
-      assert.ok(true, 'start interval called once on init, once on clear execution');
-    },
-  });
+  const service = this.subject();
   set(service, 'downKeys', [keyCodes.p, keyCodes.a, keyCodes.l, keyCodes.shift]);
   service._clearExecutionKeys(true);
   assert.deepEqual(
@@ -290,5 +287,43 @@ test('disableOnInput disables callback if focused on input', function(assert) {
         done();
       }
     });
+  });
+});
+
+test('handles modifierKeys', function(assert) {
+  assert.expect(4);
+
+  function reset(event) {
+    modifierKeys.forEach(k => set(event, `${k}Key`, false));
+  }
+
+  const service = this.subject();
+  const event = {
+    data: {
+      eventName: 'some.eventName',
+    },
+    keyCode: keyCodes.k,
+  };
+
+  service.handler(event);
+  modifierKeys.forEach((key) => {
+    const combos = [
+      {
+        eventName: 'some.eventName',
+        keys: [
+          key,
+          'k',
+        ],
+        callback() {
+          assert.ok(true, 'event is called.');
+        },
+        priority: 0,
+      },
+    ];
+    set(service, 'combos', combos);
+    set(service, 'matchFound', false);
+    reset(event);
+    set(event, `${key}Key`, true);
+    service.handler(event);
   });
 });
