@@ -159,7 +159,7 @@ export default Ember.Service.extend({
       const keys = get(combo, 'keys').slice();
 
       const verifyModifiers = modifierKeys.every((key) => {
-        return !keys.includes(key) || get(this, `${key}Key`);
+        return !get(this, `${key}Key`) || keys.includes(key);
       });
       keys.removeObjects(modifierKeys);
 
