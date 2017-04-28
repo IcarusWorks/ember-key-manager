@@ -311,6 +311,13 @@ test('handles modifierKeys', function(assert) {
       {
         eventName: 'some.eventName',
         keys: [
+          'k',
+        ],
+        priority: 0,
+      },
+      {
+        eventName: 'some.eventName',
+        keys: [
           key,
           'k',
         ],
