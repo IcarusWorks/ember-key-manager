@@ -291,7 +291,7 @@ test('disableOnInput disables callback if focused on input', function(assert) {
 });
 
 test('handles modifierKeys', function(assert) {
-  assert.expect(4);
+  assert.expect(5);
 
   function reset(event) {
     modifierKeys.forEach(k => set(event, `${k}Key`, false));
@@ -333,4 +333,32 @@ test('handles modifierKeys', function(assert) {
     set(event, `${key}Key`, true);
     service.handler(event);
   });
+
+  const combos = [
+    {
+      eventName: 'some.eventName',
+      keys: [
+        'meta',
+        'shift',
+        'k',
+      ],
+      priority: 0,
+    },
+    {
+      eventName: 'some.eventName',
+      keys: [
+        'meta',
+        'k',
+      ],
+      callback() {
+        assert.ok(true, 'event is called.');
+      },
+      priority: 0,
+    },
+  ];
+  set(service, 'combos', combos);
+  set(service, 'matchFound', false);
+  reset(event);
+  set(event, 'metaKey', true);
+  service.handler(event);
 });

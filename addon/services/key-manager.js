@@ -158,10 +158,11 @@ export default Ember.Service.extend({
     return combos.filter((combo) => {
       const keys = get(combo, 'keys').slice();
 
-      const verifyModifiers = modifierKeys.every((key) => {
-        return !get(this, `${key}Key`) || keys.includes(key);
+      const pressedModifiers = modifierKeys.filter((key) => {
+        return get(this, `${key}Key`);
       });
-      keys.removeObjects(modifierKeys);
+      const verifyModifiers = pressedModifiers.every(m => keys.includes(m));
+      keys.removeObjects(pressedModifiers);
 
       const sameLength = keys.length === downKeys.length;
       const isMatch = keys.every((key) => {
