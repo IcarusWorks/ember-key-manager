@@ -118,21 +118,23 @@ export default Ember.Service.extend({
       }
     }
 
+    this._clearDownKeys(event);
+  },
+
+  executionKeys: Ember.computed(function() {
+    return Object.keys(keyCodes).map((key) => {
+      return keyCodes[key];
+    }).reject((code) => {
+      return modifierKeyCodes.includes(code);
+    });
+  }),
+
+  _clearDownKeys(event) {
     if (event.type === 'keyup') {
       get(this, 'downKeys').removeObject(event.keyCode);
     }
 
-    this._clearExecutionKeys();
-  },
-
-  _clearExecutionKeys() {
-    const executionKeys = Object.keys(keyCodes).map((key) => {
-        return keyCodes[key];
-      })
-      .reject((code) => {
-        return modifierKeyCodes.includes(code);
-      });
-    get(this, 'downKeys').removeObjects(executionKeys);
+    get(this, 'downKeys').removeObjects(this.get('executionKeys'));
   },
 
   _findComboByName(eventName) {
