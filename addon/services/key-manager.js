@@ -24,8 +24,10 @@ export default Ember.Service.extend({
   executionKeyClearInterval: 2000,
   matchFound: false,
   uid: 0,
+  altKey: false,
   ctrlKey: false,
   metaKey: false,
+  shiftKey: false,
 
   // config options
   disableOnInput: false,
