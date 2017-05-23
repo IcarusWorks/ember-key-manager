@@ -81,46 +81,36 @@ export default Ember.Service.extend({
     });
   },
 
-  handler(event) {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
-      return;
-    }
-    const {
-      data,
-      keyCode,
-    } = event;
+  findMatchingCombo(event) {
+    try {
+      const { data, keyCode } = event;
+      const { eventName = null } = data;
 
-    if (!modifierKeyCodes.includes(keyCode)) {
-      get(this, 'downKeys').addObject(keyCode);
+      let combo = this._findComboByName(eventName);
+      if (!combo) { return; }
+
+      const isNotOnInput = inputElements.every((e) => {
+        return !$(document.activeElement).is(e);
+      });
+
+      if (!get(combo, 'disableOnInput') || isNotOnInput) {
+        const callback = get(combo, 'callback') || function() {};
+        callback(event);
+      }
+    } finally {
+      this._clearDownKeys(event);
     }
+  },
+
+  handler(event) {
+    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) { return; }
 
     modifierKeys.forEach((key) => {
       const prop = `${key}Key`;
       set(this, prop, event[prop]);
     });
 
-    if (data) {
-      const { eventName } = data;
-      const combo = this._findComboByName(eventName);
-      const runLoopGuard = !get(this, 'matchFound');
-
-      if (combo && runLoopGuard) {
-        set(this, 'matchFound', true);
-        run.next(() => {
-          set(this, 'matchFound', false);
-        });
-
-        const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
-        if (!get(combo, 'disableOnInput') || isNotOnInput) {
-          const callback = get(combo, 'callback');
-          if (callback) {
-            callback(event);
-          }
-        }
-      }
-    }
-
-    this._clearDownKeys(event);
+    this.findMatchingCombo(event);
   },
 
   executionKeys: Ember.computed(function() {
@@ -141,14 +131,11 @@ export default Ember.Service.extend({
 
   _findComboByName(eventName) {
     const combos = get(this, 'combos');
-    const combosWithKeys = this._combosWithKeys(combos)
-      .sortBy('priority');
-    const comboWithName = combosWithKeys.findBy('eventName', eventName);
+    const comboWithName = combos.findBy('eventName', eventName);
+    const keyMatchFound = this._combosWithKeys([comboWithName]).length;
+    if (!keyMatchFound) { return; }
 
-    if (!comboWithName) {
-      return false;
-    }
-
+    const combosWithKeys = this._combosWithKeys(combos).sortBy('priority');
     const highestPriority = get(combosWithKeys, 'lastObject.priority');
     const comboWithNamePriority = get(comboWithName, 'priority');
 
