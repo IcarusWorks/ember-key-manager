@@ -146,12 +146,12 @@ export default Ember.Service.extend({
 
   _combosWithKeys(combos) {
     const downKeys = get(this, 'downKeys');
+    const pressedModifiers = modifierKeys.filter((key) => {
+      return get(this, `${key}Key`);
+    });
+
     return combos.filter((combo) => {
       const keys = get(combo, 'keys').slice();
-
-      const pressedModifiers = modifierKeys.filter((key) => {
-        return get(this, `${key}Key`);
-      });
       const verifyModifiers = pressedModifiers.every(m => keys.includes(m));
       keys.removeObjects(pressedModifiers);
 
