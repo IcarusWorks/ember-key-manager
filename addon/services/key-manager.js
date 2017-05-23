@@ -7,6 +7,7 @@ const {
   $,
   get,
   getOwner,
+  isEmpty,
   run,
   set,
   setProperties,
@@ -141,18 +142,26 @@ export default Ember.Service.extend({
 
   _findComboByName(eventName) {
     const combos = get(this, 'combos');
-    const comboWithName = combos.findBy('eventName', eventName);
-    if (!comboWithName) { return; }
+    const combosWithNameAndKeys = combos
+          .filterBy('eventName', eventName)
+          .filter((combo) => {
+            // Filter for Matching Keys
+            return !isEmpty(this._combosWithKeys([combo]));
+          });
+    const comboWithNameAndKeys = combosWithNameAndKeys
+          .sortBy('priority')
+          .get('lastObject');
 
-    const keyMatchFound = this._combosWithKeys([comboWithName]).length;
-    if (!keyMatchFound) { return; }
+    if (!comboWithNameAndKeys) { return; }
 
     const combosWithKeys = this._combosWithKeys(combos).sortBy('priority');
-    const highestPriority = get(combosWithKeys, 'lastObject.priority');
-    const comboWithNamePriority = get(comboWithName, 'priority');
+    const comboWithKeys = combosWithKeys
+          .sortBy('priority')
+          .get('lastObject');
 
-    if (comboWithNamePriority >= highestPriority) {
-      return comboWithName;
+    // Matching Event is Combo with Highest Priority
+    if (get(comboWithNameAndKeys, 'priority') >= get(comboWithKeys, 'priority')) {
+      return comboWithNameAndKeys;
     }
   },
 
