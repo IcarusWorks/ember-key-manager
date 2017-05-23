@@ -86,6 +86,9 @@ export default Ember.Service.extend({
       const { data, keyCode } = event;
       const { eventName = null } = data;
 
+      if (!modifierKeyCodes.includes(keyCode)) {
+        get(this, 'downKeys').addObject(keyCode);
+      }
       let combo = this._findComboByName(eventName);
       if (!combo) { return; }
 
