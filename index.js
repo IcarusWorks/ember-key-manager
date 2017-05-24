@@ -7,6 +7,6 @@ module.exports = {
   normalizeEntityName: function() {},
 
   isDevelopingAddon: function() {
-    return true;
+    return false;
   },
 };
