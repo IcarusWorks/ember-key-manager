@@ -3,6 +3,8 @@ import Ember from 'ember';
 import keyCodes from '../../../utils/key-codes';
 import modifierKeys from '../../../utils/modifier-keys';
 
+import Combo from '../../../utils/combo';
+
 const {
   get,
   run,
@@ -31,7 +33,7 @@ test('handler() executes callback only if event has highest priority', function(
 
   const service = this.subject();
   let priorityComboCallbackCount = 0;
-  const priorityCombo = {
+  const priorityCombo = Combo.create({
     callback() {
       priorityComboCallbackCount += 1;
       assert.ok(
@@ -44,22 +46,22 @@ test('handler() executes callback only if event has highest priority', function(
       'enter',
     ],
     priority: 100,
-  };
+  });
   const combos = [
-    {
+    Combo.create({
       eventName: 'some.eventName.1',
       keys: [
         'enter',
       ],
       priority: 0,
-    },
-    {
+    }),
+    Combo.create({
       eventName: 'some.eventName.2',
       keys: [
         'enter',
       ],
       priority: 10,
-    },
+    }),
     priorityCombo,
   ];
   const enterEvent = {
@@ -70,6 +72,9 @@ test('handler() executes callback only if event has highest priority', function(
   };
 
   set(service, 'combos', combos);
+
+  console.log('combos = ', get(service, 'combos'));
+
   service.handler(enterEvent);
 
   assert.equal(
@@ -253,7 +258,7 @@ test('disableOnInput disables callback if focused on input', function(assert) {
   const done = assert.async();
 
   const service = this.subject();
-  const combo = {
+  const combo = Combo.create({
     callback() {
       assert.ok(true, 'callback is invoked only once.');
     },
@@ -263,7 +268,7 @@ test('disableOnInput disables callback if focused on input', function(assert) {
     ],
     disableOnInput: true,
     priority: 0,
-  };
+  });
   const combos = [
     combo,
   ];
@@ -306,16 +311,17 @@ test('handles modifierKeys', function(assert) {
   };
 
   service.handler(event);
+
   modifierKeys.forEach((key) => {
     const combos = [
-      {
-        eventName: 'some.eventName',
+      Combo.create({
+        eventName: 'some.eventName.0',
         keys: [
           'k',
         ],
         priority: 0,
-      },
-      {
+      }),
+      Combo.create({
         eventName: 'some.eventName',
         keys: [
           key,
@@ -325,7 +331,7 @@ test('handles modifierKeys', function(assert) {
           assert.ok(true, 'event is called.');
         },
         priority: 0,
-      },
+      }),
     ];
     set(service, 'combos', combos);
     set(service, 'matchFound', false);
@@ -335,16 +341,16 @@ test('handles modifierKeys', function(assert) {
   });
 
   const combos = [
-    {
-      eventName: 'some.eventName',
+    Combo.create({
+      eventName: 'some.eventName.2',
       keys: [
         'meta',
         'shift',
         'k',
       ],
       priority: 0,
-    },
-    {
+    }),
+    Combo.create({
       eventName: 'some.eventName',
       keys: [
         'meta',
@@ -354,7 +360,7 @@ test('handles modifierKeys', function(assert) {
         assert.ok(true, 'event is called.');
       },
       priority: 0,
-    },
+    }),
   ];
   set(service, 'combos', combos);
   set(service, 'matchFound', false);

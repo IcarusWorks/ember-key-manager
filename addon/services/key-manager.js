@@ -5,6 +5,7 @@ import modifierKeyCodes from '../utils/modifier-key-codes';
 
 const {
   $,
+  computed,
   get,
   getOwner,
   run,
@@ -19,13 +20,17 @@ const inputElements = [
   "[contenteditable='true']",
 ];
 
+import Combo from '../utils/combo';
+
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
   executionKeyClearInterval: 2000,
   matchFound: false,
   uid: 0,
+  altKey: false,
   ctrlKey: false,
   metaKey: false,
+  shiftKey: false,
 
   // config options
   disableOnInput: false,
@@ -44,7 +49,7 @@ export default Ember.Service.extend({
       const uid = get(this, 'uid');
       const callback = direction === 'up' ? upCallback : downCallback;
       const eventName = `key${direction}.${eventNamespace}.${name}.${uid}`;
-      const combo = {
+      const combo = Combo.create({
         callback,
         direction,
         eventName,
@@ -54,7 +59,7 @@ export default Ember.Service.extend({
         priority,
         uid,
         disableOnInput,
-      };
+      });
 
       get(this, 'combos').pushObject(combo);
       selector.on(eventName, {
@@ -79,100 +84,105 @@ export default Ember.Service.extend({
     });
   },
 
+  findMatchingCombo(event) {
+    try {
+      const { data, keyCode } = event;
+      const { eventName = null } = data;
+
+      modifierKeys.forEach((key) => {
+        const prop = `${key}Key`;
+        set(this, prop, event[prop]);
+      });
+
+      if (!modifierKeyCodes.includes(keyCode)) {
+        get(this, 'downKeys').addObject(keyCode);
+      }
+
+      return this._findComboByName(eventName);
+    } finally {
+      this._clearExecutionKeys(event);
+    }
+  },
+
   handler(event) {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
-      return;
-    }
-    const {
-      data,
-      keyCode,
-    } = event;
+    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) { return; }
 
-    if (!modifierKeyCodes.includes(keyCode)) {
-      get(this, 'downKeys').addObject(keyCode);
-    }
+    const combo = this.findMatchingCombo(event);
+    const runLoopGuard = !get(this, 'matchFound');
 
-    modifierKeys.forEach((key) => {
-      const prop = `${key}Key`;
-      set(this, prop, event[prop]);
-    });
+    if (combo && runLoopGuard) {
+      set(this, 'matchFound', true);
+      run.next(() => {
+        set(this, 'matchFound', false);
+      });
 
-    if (data) {
-      const { eventName } = data;
-      const combo = this._findComboByName(eventName);
-      const runLoopGuard = !get(this, 'matchFound');
-
-      if (combo && runLoopGuard) {
-        set(this, 'matchFound', true);
-        run.next(() => {
-          set(this, 'matchFound', false);
-        });
-
-        const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
-        if (!get(combo, 'disableOnInput') || isNotOnInput) {
-          const callback = get(combo, 'callback');
-          if (callback) {
-            callback(event);
-          }
+      const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
+      if (!get(combo, 'disableOnInput') || isNotOnInput) {
+        const callback = get(combo, 'callback');
+        if (callback) {
+          callback(event);
         }
       }
     }
+  },
 
+  executionKeys: computed(function() {
+    return Object.keys(keyCodes).map((key) => {
+      return keyCodes[key];
+    }).reject((code) => {
+      return modifierKeyCodes.includes(code);
+    });
+  }),
+
+  _clearExecutionKeys(event) {
     if (event.type === 'keyup') {
       get(this, 'downKeys').removeObject(event.keyCode);
     }
 
-    this._clearExecutionKeys();
-  },
-
-  _clearExecutionKeys() {
-    const executionKeys = Object.keys(keyCodes).map((key) => {
-        return keyCodes[key];
-      })
-      .reject((code) => {
-        return modifierKeyCodes.includes(code);
-      });
-    get(this, 'downKeys').removeObjects(executionKeys);
+    get(this, 'downKeys').removeObjects(this.get('executionKeys'));
   },
 
   _findComboByName(eventName) {
     const combos = get(this, 'combos');
-    const combosWithKeys = this._combosWithKeys(combos)
-      .sortBy('priority');
-    const comboWithName = combosWithKeys.findBy('eventName', eventName);
+    const comboWithName = combos.findBy('eventName', eventName);
 
-    if (!comboWithName) {
-      return false;
-    }
+    if (!this.isComboKeyMatch(comboWithName)) { return; }
 
-    const highestPriority = get(combosWithKeys, 'lastObject.priority');
-    const comboWithNamePriority = get(comboWithName, 'priority');
+    const highestPriorityCombo = this._combosWithKeys(combos)
+          .sortBy('priority')
+          .get('lastObject');
 
-    if (comboWithNamePriority >= highestPriority) {
+    // Matching Event is Combo with Highest Priority
+    if (get(comboWithName, 'priority') >= get(highestPriorityCombo, 'priority')) {
       return comboWithName;
     }
   },
 
   _combosWithKeys(combos) {
+    return combos.filter(c => this.isComboKeyMatch(c));
+  },
+
+  pressedModifiers: computed('altKey', 'ctrlKey', 'metaKey', 'shiftKey', {
+    get() {
+      return modifierKeys.filter(key => get(this, `${key}Key`));
+    }
+  }),
+
+  isComboKeyMatch(combo) {
+    if (!combo) { return; }
+
     const downKeys = get(this, 'downKeys');
-    return combos.filter((combo) => {
-      const keys = get(combo, 'keys').slice();
+    const pressedModifiers = get(this, 'pressedModifiers');
 
-      const pressedModifiers = modifierKeys.filter((key) => {
-        return get(this, `${key}Key`);
-      });
-      const verifyModifiers = pressedModifiers.every(m => keys.includes(m));
-      keys.removeObjects(pressedModifiers);
+    let comboKeys = get(combo, 'keys');
+    let comboModifierKeys = get(combo, 'modifierKeys');
+    let comboExecutionKeys = get(combo, 'executionKeys');
 
-      const sameLength = keys.length === downKeys.length;
-      const isMatch = keys.every((key) => {
-        return downKeys.includes(keyCodes[key]);
-      });
-
-      return sameLength &&
-        isMatch &&
-        verifyModifiers;
-    });
+    return (comboKeys.length === pressedModifiers.length + downKeys.length) &&
+    // Filter Combos with Matching Modifier Keys
+    comboModifierKeys.every(k => pressedModifiers.includes(k)) &&
+    // Filter Combos with Matching Execution Keys
+    comboExecutionKeys.every(k => downKeys.includes(keyCodes[k]));
   },
 
   _resetDownKeys() {
