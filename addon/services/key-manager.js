@@ -5,9 +5,9 @@ import modifierKeyCodes from '../utils/modifier-key-codes';
 
 const {
   $,
+  computed,
   get,
   getOwner,
-  isEmpty,
   run,
   set,
   setProperties,
@@ -19,6 +19,8 @@ const inputElements = [
   'select',
   "[contenteditable='true']",
 ];
+
+import Combo from '../utils/combo';
 
 export default Ember.Service.extend({
   clearExecutionKeysLater: null,
@@ -47,7 +49,7 @@ export default Ember.Service.extend({
       const uid = get(this, 'uid');
       const callback = direction === 'up' ? upCallback : downCallback;
       const eventName = `key${direction}.${eventNamespace}.${name}.${uid}`;
-      const combo = {
+      const combo = Combo.create({
         callback,
         direction,
         eventName,
@@ -57,7 +59,7 @@ export default Ember.Service.extend({
         priority,
         uid,
         disableOnInput,
-      };
+      });
 
       get(this, 'combos').pushObject(combo);
       selector.on(eventName, {
@@ -124,7 +126,7 @@ export default Ember.Service.extend({
     }
   },
 
-  executionKeys: Ember.computed(function() {
+  executionKeys: computed(function() {
     return Object.keys(keyCodes).map((key) => {
       return keyCodes[key];
     }).reject((code) => {
@@ -142,49 +144,45 @@ export default Ember.Service.extend({
 
   _findComboByName(eventName) {
     const combos = get(this, 'combos');
-    const combosWithNameAndKeys = combos
-          .filterBy('eventName', eventName)
-          .filter((combo) => {
-            // Filter for Matching Keys
-            return !isEmpty(this._combosWithKeys([combo]));
-          });
-    const comboWithNameAndKeys = combosWithNameAndKeys
-          .sortBy('priority')
-          .get('lastObject');
+    const comboWithName = combos.findBy('eventName', eventName);
 
-    if (!comboWithNameAndKeys) { return; }
+    if (!this.isComboKeyMatch(comboWithName)) { return; }
 
-    const combosWithKeys = this._combosWithKeys(combos).sortBy('priority');
-    const comboWithKeys = combosWithKeys
+    const highestPriorityCombo = this._combosWithKeys(combos)
           .sortBy('priority')
           .get('lastObject');
 
     // Matching Event is Combo with Highest Priority
-    if (get(comboWithNameAndKeys, 'priority') >= get(comboWithKeys, 'priority')) {
-      return comboWithNameAndKeys;
+    if (get(comboWithName, 'priority') >= get(highestPriorityCombo, 'priority')) {
+      return comboWithName;
     }
   },
 
   _combosWithKeys(combos) {
+    return combos.filter(c => this.isComboKeyMatch(c));
+  },
+
+  pressedModifiers: computed('altKey', 'ctrlKey', 'metaKey', 'shiftKey', {
+    get() {
+      return modifierKeys.filter(key => get(this, `${key}Key`));
+    }
+  }),
+
+  isComboKeyMatch(combo) {
+    if (!combo) { return; }
+
     const downKeys = get(this, 'downKeys');
-    const pressedModifiers = modifierKeys.filter((key) => {
-      return get(this, `${key}Key`);
-    });
+    const pressedModifiers = get(this, 'pressedModifiers');
 
-    return combos.filter((combo) => {
-      const keys = get(combo, 'keys').slice();
-      const verifyModifiers = pressedModifiers.every(m => keys.includes(m));
-      keys.removeObjects(pressedModifiers);
+    let comboKeys = get(combo, 'keys');
+    let comboModifierKeys = get(combo, 'modifierKeys');
+    let comboExecutionKeys = get(combo, 'executionKeys');
 
-      const sameLength = keys.length === downKeys.length;
-      const isMatch = keys.every((key) => {
-        return downKeys.includes(keyCodes[key]);
-      });
-
-      return sameLength &&
-        isMatch &&
-        verifyModifiers;
-    });
+    return (comboKeys.length === pressedModifiers.length + downKeys.length) &&
+    // Filter Combos with Matching Modifier Keys
+    comboModifierKeys.every(k => pressedModifiers.includes(k)) &&
+    // Filter Combos with Matching Execution Keys
+    comboExecutionKeys.every(k => downKeys.includes(keyCodes[k]));
   },
 
   _resetDownKeys() {
