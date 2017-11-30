@@ -1,28 +1,23 @@
-import Ember from 'ember';
+import Service from '@ember/service';
+import $ from 'jquery';
+import { getOwner } from '@ember/application';
+import { run } from '@ember/runloop';
+import { setProperties, set, get, computed } from '@ember/object';
 import keyCodes from '../utils/key-codes';
 import modifierKeys from '../utils/modifier-keys';
 import modifierKeyCodes from '../utils/modifier-key-codes';
+import Combo from '../utils/combo';
 
-const {
-  $,
-  computed,
-  get,
-  getOwner,
-  run,
-  set,
-  setProperties,
-} = Ember;
 const eventNamespace = 'key-manager';
 const inputElements = [
   'input',
   'textarea',
   'select',
-  "[contenteditable='true']",
+  `[contenteditable='true']`,
 ];
 
-import Combo from '../utils/combo';
 
-export default Ember.Service.extend({
+export default Service.extend({
   clearExecutionKeysLater: null,
   executionKeyClearInterval: 2000,
   matchFound: false,
@@ -138,7 +133,6 @@ export default Ember.Service.extend({
     if (event.type === 'keyup') {
       get(this, 'downKeys').removeObject(event.keyCode);
     }
-
     get(this, 'downKeys').removeObjects(this.get('executionKeys'));
   },
 
@@ -149,8 +143,8 @@ export default Ember.Service.extend({
     if (!this.isComboKeyMatch(comboWithName)) { return; }
 
     const highestPriorityCombo = this._combosWithKeys(combos)
-          .sortBy('priority')
-          .get('lastObject');
+      .sortBy('priority')
+      .get('lastObject');
 
     // Matching Event is Combo with Highest Priority
     if (get(comboWithName, 'priority') >= get(highestPriorityCombo, 'priority')) {

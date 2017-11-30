@@ -72,15 +72,13 @@ The modifier keys – those that don't trigger execution of a shortcut – can b
 Here's an example usage on a component:
 
 ```js
-import Ember from 'ember';
+import Component from '@ember/component';
+import { inject as injectService } from '@ember/service';
+import { get } from '@ember/object';
+import { run } from '@ember/runloop';
 
-const {
-  get,
-  inject,
-} = Ember;
-
-export default Ember.Component.extend({
-  keyManager: inject.service(),
+export default Component.extend({
+  keyManager: injectService(),
 
   didInsertElement() {
     get(this, 'keyManager').register({
@@ -110,15 +108,13 @@ export default Ember.Component.extend({
 And an example on a route:
 
 ```js
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+import { inject as injectService } from '@ember/service';
+import { get } from '@ember/object';
+import { run } from '@ember/runloop';
 
-const {
-  get,
-  inject,
-} = Ember;
-
-export default Ember.Route.extend({
-  keyManager: inject.service(),
+export default Route.extend({
+  keyManager: injectService(),
 
   actions: {
     didTransition() {

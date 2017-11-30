@@ -1,8 +1,6 @@
+import { get } from '@ember/object';
 import Combo from 'dummy/utils/combo';
-import Ember from 'ember';
 import { module, test } from 'qunit';
-
-const { get } = Ember;
 
 module('Unit | Utility | combo');
 
