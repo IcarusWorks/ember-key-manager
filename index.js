@@ -1,4 +1,4 @@
-/* jshint node: true */
+/* eslint-env node */
 'use strict';
 
 module.exports = {
@@ -7,6 +7,6 @@ module.exports = {
   normalizeEntityName: function() {},
 
   isDevelopingAddon: function() {
-    return false;
+    return true;
   },
 };

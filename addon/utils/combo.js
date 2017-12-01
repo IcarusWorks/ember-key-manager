@@ -1,12 +1,7 @@
-import Ember from 'ember';
+import EmberObject, { get, computed } from '@ember/object';
 import modifierKeys from '../utils/modifier-keys';
 
-const {
-  computed,
-  get,
-} = Ember;
-
-export default Ember.Object.extend({
+export default EmberObject.extend({
   modifierKeys: computed('keys', {
     get() {
       const keys = get(this, 'keys');

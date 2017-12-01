@@ -1,15 +1,13 @@
+import { getOwner } from '@ember/application';
+import { run } from '@ember/runloop';
+import { set, get } from '@ember/object';
 import { moduleFor, test } from 'ember-qunit';
-import Ember from 'ember';
 import keyCodes from '../../../utils/key-codes';
 import modifierKeys from '../../../utils/modifier-keys';
+import $ from 'jquery';
 
 import Combo from '../../../utils/combo';
 
-const {
-  get,
-  run,
-  set,
-} = Ember;
 const config = {
   disableOnInput: false,
 };
@@ -22,7 +20,7 @@ const inputElements = [
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
   beforeEach() {
-    Ember.getOwner(this).register('main:key-manager-config', config, {
+    getOwner(this).register('main:key-manager-config', config, {
       instantiate: false,
     });
   },
@@ -72,8 +70,6 @@ test('handler() executes callback only if event has highest priority', function(
   };
 
   set(service, 'combos', combos);
-
-  console.log('combos = ', get(service, 'combos'));
 
   service.handler(enterEvent);
 
@@ -246,7 +242,7 @@ test('clears execution keys', function(assert) {
 test('sets defaults on init', function(assert) {
   assert.expect(1);
 
-  const config = Ember.getOwner(this).lookup('main:key-manager-config');
+  const config = getOwner(this).lookup('main:key-manager-config');
   set(config, 'disableOnInput', true);
 
   const service = this.subject();
