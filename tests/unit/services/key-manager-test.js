@@ -2,6 +2,9 @@ import { moduleFor, test } from 'ember-qunit';
 import Ember from 'ember';
 import keyCodes from '../../../utils/key-codes';
 import modifierKeys from '../../../utils/modifier-keys';
+import {
+  focus,
+} from 'ember-native-dom-helpers';
 
 import Combo from '../../../utils/combo';
 
@@ -72,8 +75,6 @@ test('handler() executes callback only if event has highest priority', function(
   };
 
   set(service, 'combos', combos);
-
-  console.log('combos = ', get(service, 'combos'));
 
   service.handler(enterEvent);
 
@@ -285,7 +286,9 @@ test('disableOnInput disables callback if focused on input', function(assert) {
   service.handler(enterEvent);
 
   inputElements.forEach((e, i) => {
-    $().add('input').focus();
+    const input = document.createElement("INPUT");
+    document.body.appendChild(input);
+    focus(input);
     run.next(() => {
       service.handler(enterEvent);
       if (i === (inputElements.length - 1)) {
