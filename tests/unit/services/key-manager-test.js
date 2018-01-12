@@ -1,373 +1,476 @@
+import { getOwner } from '@ember/application';
+import {
+  set,
+  get,
+} from '@ember/object';
+import { assign } from '@ember/polyfills';
 import { moduleFor, test } from 'ember-qunit';
-import Ember from 'ember';
-import keyCodes from '../../../utils/key-codes';
-import modifierKeys from '../../../utils/modifier-keys';
 import {
   focus,
 } from 'ember-native-dom-helpers';
+import wait from 'ember-test-helpers/wait';
+import { Promise } from 'rsvp';
 
-import Combo from '../../../utils/combo';
-
-const {
-  get,
-  run,
-  set,
-} = Ember;
-const config = {
-  disableOnInput: false,
+const configOptions = {
+  isDisabledOnInput: false,
 };
-const inputElements = [
-  'input',
-  'textarea',
-  'select',
-  "[contenteditable='true']",
-];
+let config;
+
+async function dispatchEvent(element, event) {
+  await element.dispatchEvent(event);
+  await wait();
+  return event;
+}
+
+let firstMacroCallCount = 0;
+let secondMacroCallCount = 0;
+let thirdMacroCallCount = 0;
+let fourthMacroCallCount = 0;
+let fifthMacroCallCount = 0;
+const div = document.createElement('DIV');
+
+const firstMacroAttrs = {
+  callback: function() {
+    firstMacroCallCount += 1;
+  },
+  element: div,
+  modifierKeys: ['shiftKey'],
+  keyEvent: 'keydown',
+};
+
+const secondMacroAttrs = {
+  callback: function() {
+    secondMacroCallCount += 1;
+  },
+  executionKey: 'a',
+  modifierKeys: ['ctrlKey', 'altKey'],
+  priority: 100,
+  keyEvent: 'keydown',
+};
+
+// thirdMacro
+//
+// Same as `secondMacro` except:
+// * `element` is set to a `div`
+// * `executionKey` is set to 'b'
+//
+const thirdMacroAttrs = {
+  callback: function() {
+    thirdMacroCallCount += 1;
+  },
+  element: div,
+  executionKey: 'b',
+  modifierKeys: ['ctrlKey', 'altKey'],
+  keyEvent: 'keydown',
+};
+
+// fourthMacro
+//
+// Same as `secondMacro` except:
+// * `keyEvent` is set to a `keyup`
+//
+const fourthMacroAttrs = {
+  callback: function() {
+    fourthMacroCallCount += 1;
+  },
+  executionKey: 'a',
+  modifierKeys: ['ctrlKey', 'altKey'],
+  keyEvent: 'keyup',
+};
+
+// fifthMacro
+//
+// Same as `secondMacro` except:
+// * `priority` is lower
+//
+const fifthMacroAttrs = {
+  callback: function() {
+    fifthMacroCallCount += 1;
+  },
+  executionKey: 'a',
+  modifierKeys: ['ctrlKey', 'altKey'],
+  priority: 1,
+  keyEvent: 'keydown',
+};
+
+const firstMacroEvent = new KeyboardEvent('keydown', {
+  shiftKey: true,
+});
+
+const secondMacroEvent = new KeyboardEvent('keydown', {
+  altKey: true,
+  ctrlKey: true,
+  key: 'a',
+});
+
+const thirdMacroEvent = new KeyboardEvent('keydown', {
+  altKey: true,
+  ctrlKey: true,
+  key: 'b',
+});
+
+const fourthMacroEvent = new KeyboardEvent('keyup', {
+  altKey: true,
+  ctrlKey: true,
+  key: 'a',
+});
+
+const fifthMacroEvent = new KeyboardEvent('keydown', {
+  altKey: true,
+  ctrlKey: true,
+  key: 'a',
+});
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
   beforeEach() {
-    Ember.getOwner(this).register('main:key-manager-config', config, {
+    document.body.appendChild(div);
+    getOwner(this).register('main:key-manager-config', configOptions, {
       instantiate: false,
     });
+    config = getOwner(this).lookup('main:key-manager-config');
+  },
+  afterEach() {
+    document.body.removeChild(div);
+    div.contentEditable = false;
+    firstMacroCallCount = 0;
+    secondMacroCallCount = 0;
+    thirdMacroCallCount = 0;
+    fourthMacroCallCount = 0;
+    fifthMacroCallCount = 0;
+    set(config, 'isDisabledOnInput', null);
   },
 });
 
-test('handler() executes callback only if event has highest priority', function(assert) {
-  assert.expect(4);
-
+test('`init()` sets `keydownMacros` `keyupMacros to empty arrays`', function(assert) {
   const service = this.subject();
-  let priorityComboCallbackCount = 0;
-  const priorityCombo = Combo.create({
-    callback() {
-      priorityComboCallbackCount += 1;
-      assert.ok(
-        true,
-        'combo with highest priority is called'
-      );
-    },
-    eventName: 'some.eventName.3',
-    keys: [
-      'enter',
-    ],
-    priority: 100,
-  });
-  const combos = [
-    Combo.create({
-      eventName: 'some.eventName.1',
-      keys: [
-        'enter',
-      ],
-      priority: 0,
-    }),
-    Combo.create({
-      eventName: 'some.eventName.2',
-      keys: [
-        'enter',
-      ],
-      priority: 10,
-    }),
-    priorityCombo,
-  ];
-  const enterEvent = {
-    data: {
-      eventName: 'some.eventName.3',
-    },
-    keyCode: keyCodes.enter,
-  };
 
-  set(service, 'combos', combos);
-
-  service.handler(enterEvent);
-
-  assert.equal(
-    get(service, 'downKeys').length,
-    0,
-    'enter event key should not be stored'
-  );
-  assert.equal(
-    priorityComboCallbackCount,
-    1,
-    'highest priority combo callback called once'
-  );
-
-  set(priorityCombo, 'priority', 0);
-  service.handler(enterEvent);
-
-  assert.equal(
-    priorityComboCallbackCount,
-    1,
-    'highest priority combo callback still only called once, not again'
-  );
+  assert.deepEqual(get(service, 'keydownMacros'), []);
+  assert.deepEqual(get(service, 'keyupMacros'), []);
 });
 
-test('register()', function(assert) {
-  assert.expect(10);
+test('`init()` sets defaults from config', function(assert) {
+  set(config, 'isDisabledOnInput', true);
 
   const service = this.subject();
-  let hasBeenCalled = false;
-
-  service.register({
-    keys: ['shift'],
-    name: 'workout-select-manager',
-    downCallback: () => {},
-    upCallback: () => {},
-    selector: {
-      on(name, data, handler) {
-        if (!hasBeenCalled) {
-          assert.equal(arguments.length, 3, 'three args should be passed');
-          assert.equal(
-            name,
-            'keyup.key-manager.workout-select-manager.0',
-            'name is set'
-          );
-          assert.ok(
-            typeof handler === 'function',
-            'handler is a function'
-          );
-          hasBeenCalled = true;
-        }
-      },
-    },
-  });
-
-  assert.equal(
-    get(service, 'combos').length,
-    2,
-    'up and down combo should be set'
-  );
-  assert.ok(
-    get(service, 'combos.lastObject.callback'),
-    'combo callback should be set'
-  );
-  assert.equal(
-    get(service, 'combos.lastObject.direction'),
-    'down',
-    'combo direction should be set'
-  );
-  assert.equal(
-    get(service, 'combos.lastObject.eventName'),
-    'keydown.key-manager.workout-select-manager.1',
-    'combo eventName should be set'
-  );
-  assert.equal(
-    get(service, 'combos.lastObject.name'),
-    'workout-select-manager',
-    'combo name should be set'
-  );
-  assert.deepEqual(
-    get(service, 'combos.lastObject.keys'),
-    ['shift'],
-    'combo keys should be set'
-  );
-  assert.ok(
-    get(service, 'combos.lastObject.selector'),
-    'combo selector should be set'
-  );
+  assert.ok(get(service, 'isDisabledOnInput'), 'isDisabledOnInput is true from config.');
 });
 
-test('deregister()', function(assert) {
-  assert.expect(5);
+test('`addMacro()`', async function(assert) {
+  assert.expect(15);
 
   const service = this.subject();
-  set(service, 'combos', [
-    {
-      name: 'name1',
-      eventName: 'eventName1',
-      selector: {
-        off(eventName) {
-          assert.equal(
-            eventName,
-            'eventName1',
-            'off is called with correct event name'
-          );
-        },
-      },
-    },
-    {
-      name: 'name1',
-      eventName: 'eventName1.stuff',
-      selector: {
-        off(eventName) {
-          assert.equal(
-            eventName,
-            'eventName1.stuff',
-            'off is called with correct event name'
-          );
-        },
-      },
-    },
-    {
-      name: 'name2',
-      eventName: 'eventName2',
-      selector: {
-      },
-    },
-    {
-      name: 'name3',
-      eventName: 'eventName3',
-      selector: {
-        off(eventName) {
-          assert.equal(
-            eventName,
-            'eventName3',
-            'off is called with correct event name'
-          );
-        },
-      },
-    },
-  ]);
+
+  service.addMacro(firstMacroAttrs);
+  service.addMacro(secondMacroAttrs);
+  service.addMacro(thirdMacroAttrs);
+  service.addMacro(fourthMacroAttrs);
+  service.addMacro(fifthMacroAttrs);
+
   assert.equal(
-    get(service, 'combos').length,
+    get(service, 'keydownMacros').length,
     4,
-    'should have 4 combos to start'
+    'keydown macros should be set'
   );
 
-  service.deregister({name: 'name1'});
-  service.deregister({name: 'name3'});
+  await dispatchEvent(div, firstMacroEvent);             // YES `assert`
+  await dispatchEvent(div, firstMacroEvent);             // YES `assert`
+  await dispatchEvent(document.body, firstMacroEvent);   // NO  `assert`
+  await dispatchEvent(document.body, secondMacroEvent);  // YES `assert`
+  await dispatchEvent(document.body, secondMacroEvent);  // YES `assert`
+  await dispatchEvent(div, secondMacroEvent);            // NO  `assert`
+  await dispatchEvent(document.body, fifthMacroEvent);   // YES `assert`
+
+  assert.equal(firstMacroCallCount, 2, 'firstMacro callback is called twice directly');
+  assert.equal(secondMacroCallCount, 3, 'secondMacro callback is called twice directly and once by fifthMacro because it has a higher priority')
+  assert.equal(thirdMacroCallCount, 0, 'thirdMacro callback is not called');
+  assert.equal(fourthMacroCallCount, 0, 'fourthMacro callback is not called');
+  assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called');
+
+  const firstMacro = get(service, 'keydownMacros').objectAt(0);
+  assert.notOk(
+    get(firstMacro, 'executionKey'),
+    'firstMacro execution key should not be set'
+  );
+  assert.deepEqual(
+    get(firstMacro, 'modifierKeys'),
+    ['shiftKey'],
+    'firstMacro modifier keys should be set'
+  );
+  assert.equal(
+    get(firstMacro, 'element'),
+    div,
+    'element should be set to passed in element'
+  );
+
+  const secondMacro = get(service, 'keydownMacros').objectAt(1);
+  assert.equal(
+    get(secondMacro, 'executionKey'),
+    'a',
+    'secondMacro execution key should be set'
+  );
+  assert.deepEqual(
+    get(secondMacro, 'modifierKeys'),
+    ['ctrlKey', 'altKey'],
+    'secondMacro modifier keys should be set'
+  );
+  assert.equal(
+    get(secondMacro, 'element'),
+    document.body,
+    'element should be set to default'
+  );
+
+  const thirdMacro = get(service, 'keydownMacros').objectAt(2);
+  assert.equal(
+    get(thirdMacro, 'executionKey'),
+    'b',
+    'thirdMacro execution key should be set'
+  );
+  assert.deepEqual(
+    get(thirdMacro, 'modifierKeys'),
+    ['ctrlKey', 'altKey'],
+    'thirdMacro modifier keys should be set'
+  );
+  assert.equal(
+    get(thirdMacro, 'element'),
+    div,
+    'element should be set to default'
+  );
+});
+
+test('`removeMacro()`', async function(assert) {
+  assert.expect(37);
+
+  const service = this.subject();
+
+  const firstMacro = service.addMacro(firstMacroAttrs);
+  const secondMacro = service.addMacro(secondMacroAttrs);
+  const thirdMacro = service.addMacro(thirdMacroAttrs);
+  const fourthMacro = service.addMacro(fourthMacroAttrs);
+  const fifthMacro = service.addMacro(fifthMacroAttrs);
 
   assert.equal(
-    get(service, 'combos').length,
+    get(service, 'keydownMacros').length,
+    4,
+    'keydown macros should be set'
+  );
+  assert.equal(
+    get(service, 'keyupMacros').length,
     1,
-    'should have 1 combo after deregisters'
+    'keyup macros should be set'
   );
-});
 
-test('clears execution keys', function(assert) {
-  assert.expect(1);
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
 
-  const service = this.subject();
-  set(service, 'downKeys', [keyCodes.p, keyCodes.a, keyCodes.l, keyCodes.shift]);
-  service._clearExecutionKeys(true);
-  assert.deepEqual(
-    get(service, 'downKeys'),
-    [keyCodes.shift],
-    'execution keys should be cleared'
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is called');
+  assert.equal(secondMacroCallCount, 2, 'secondMacro callback is called, once by itself, once by fifthMacro because of priority');
+  assert.equal(thirdMacroCallCount, 1, 'thirdMacro callback is called');
+  assert.equal(fourthMacroCallCount, 1, 'fourthMacro callback is called');
+  assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called because of low priority');
+
+  service.removeMacro(firstMacro);
+
+  assert.equal(
+    get(service, 'keydownMacros').length,
+    3,
+    'keydown macros should be set'
   );
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is not called again');
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is called, once again by itself, once again by fifthMacro because of priority');
+  assert.equal(thirdMacroCallCount, 2, 'thirdMacro callback is called');
+  assert.equal(fourthMacroCallCount, 2, 'fourthMacro callback is called');
+  assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called because of low priority');
+
+  service.removeMacro(secondMacro);
+
+  assert.equal(
+    get(service, 'keydownMacros').length,
+    2,
+    'keydown macros should be set'
+  );
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is not called again');
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is not called again');
+  assert.equal(thirdMacroCallCount, 3, 'thirdMacro callback is called');
+  assert.equal(fourthMacroCallCount, 3, 'fourthMacro callback is called');
+  assert.equal(fifthMacroCallCount, 2, 'fifthMacro callback is called, once by itself, once by secondMacro call');
+
+  service.removeMacro(thirdMacro);
+
+  assert.equal(
+    get(service, 'keydownMacros').length,
+    1,
+    'keydown macros should not be set'
+  );
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is not called again');
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is not called again');
+  assert.equal(thirdMacroCallCount, 3, 'thirdMacro callback is not called again');
+  assert.equal(fourthMacroCallCount, 4, 'fourthMacro callback is called');
+  assert.equal(fifthMacroCallCount, 4, 'fifthMacro callback is called, once again by itself, once again by secondMacro call');
+
+  service.removeMacro(fourthMacro);
+
+  assert.equal(
+    get(service, 'keyupMacros').length,
+    0,
+    'keyup macros should not be set'
+  );
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is not called again');
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is not called again');
+  assert.equal(thirdMacroCallCount, 3, 'thirdMacro callback is not called again');
+  assert.equal(fourthMacroCallCount, 4, 'fourthMacro callback is not called again');
+  assert.equal(fifthMacroCallCount, 6, 'fifthMacro callback is called, once again by itself, once again by secondMacro call');
+
+  service.removeMacro(fifthMacro);
+
+  assert.equal(
+    get(service, 'keyupMacros').length,
+    0,
+    'keyup macros should not be set'
+  );
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(document.body, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+  await dispatchEvent(document.body, fourthMacroEvent);
+  await dispatchEvent(document.body, fifthMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro callback is not called again');
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is not called again');
+  assert.equal(thirdMacroCallCount, 3, 'thirdMacro callback is not called again');
+  assert.equal(fourthMacroCallCount, 4, 'fourthMacro callback is not called again');
+  assert.equal(fifthMacroCallCount, 6, 'fifthMacro callback is not called again');
 });
 
-test('sets defaults on init', function(assert) {
-  assert.expect(1);
-
-  const config = Ember.getOwner(this).lookup('main:key-manager-config');
-  set(config, 'disableOnInput', true);
+test('`isDisabledOnInput` option disables callback on contentEditable elements', async function(assert) {
+  assert.expect(2);
 
   const service = this.subject();
-  assert.ok(get(service, 'disableOnInput'), 'disableOnInput is true from config.');
+  let macroAttrs = assign({}, firstMacroAttrs, { isDisabledOnInput: true });
+
+  service.addMacro(macroAttrs);
+
+  focus(div);
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'callback is called');
+
+  div.contentEditable = true;
+
+  focus(div);
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'callback is not called');
 });
 
-test('disableOnInput disables callback if focused on input', function(assert) {
-  assert.expect(1);
-  const done = assert.async();
+test('`isDisabledOnInput` option disables callback on input elements', async function(assert) {
+  assert.expect(6);
 
   const service = this.subject();
-  const combo = Combo.create({
-    callback() {
-      assert.ok(true, 'callback is invoked only once.');
-    },
-    eventName: 'some.eventName.1',
-    keys: [
-      'enter',
-    ],
-    disableOnInput: true,
-    priority: 0,
-  });
-  const combos = [
-    combo,
-  ];
 
-  set(service, 'combos', combos);
+  const promises = ['input', 'textarea', 'select'].map((elementName) => {
+    return new Promise(async(resolve) => {
+      const element = document.createElement(elementName);
+      document.body.appendChild(element);
 
-  const enterEvent = {
-    data: {
-      eventName: 'some.eventName.1',
-    },
-    keyCode: keyCodes.enter,
-  };
+      let macroAttrs = assign({}, firstMacroAttrs, { element });
+      const macro = service.addMacro(macroAttrs);
 
-  service.handler(enterEvent);
+      focus(element);
+      await dispatchEvent(element, firstMacroEvent);
 
-  inputElements.forEach((e, i) => {
-    const input = document.createElement("INPUT");
-    document.body.appendChild(input);
-    focus(input);
-    run.next(() => {
-      service.handler(enterEvent);
-      if (i === (inputElements.length - 1)) {
-        done();
-      }
+      assert.equal(firstMacroCallCount, 1, 'callback is called');
+
+      service.removeMacro(macro);
+      macroAttrs = assign(macroAttrs, { isDisabledOnInput: true });
+      service.addMacro(macroAttrs);
+
+      focus(element);
+      await dispatchEvent(element, firstMacroEvent);
+
+      assert.equal(firstMacroCallCount, 1, 'callback is not called');
+      element.remove();
+      resolve();
     });
   });
+
+  await Promise.all(promises);
 });
 
-test('handles modifierKeys', function(assert) {
-  assert.expect(5);
+test('`isDisabledOnInput` config option disables callback on contentEditable elements', async function(assert) {
+  assert.expect(2);
 
-  function reset(event) {
-    modifierKeys.forEach(k => set(event, `${k}Key`, false));
-  }
+  set(config, 'isDisabledOnInput', true);
 
   const service = this.subject();
-  const event = {
-    data: {
-      eventName: 'some.eventName',
-    },
-    keyCode: keyCodes.k,
-  };
 
-  service.handler(event);
+  service.addMacro(firstMacroAttrs);
 
-  modifierKeys.forEach((key) => {
-    const combos = [
-      Combo.create({
-        eventName: 'some.eventName.0',
-        keys: [
-          'k',
-        ],
-        priority: 0,
-      }),
-      Combo.create({
-        eventName: 'some.eventName',
-        keys: [
-          key,
-          'k',
-        ],
-        callback() {
-          assert.ok(true, 'event is called.');
-        },
-        priority: 0,
-      }),
-    ];
-    set(service, 'combos', combos);
-    set(service, 'matchFound', false);
-    reset(event);
-    set(event, `${key}Key`, true);
-    service.handler(event);
+  focus(div);
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'callback is called');
+
+  div.contentEditable = true;
+
+  focus(div);
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'callback is not called');
+});
+
+test('`isDisabledOnInput` config option disables callback on input elements', async function(assert) {
+  assert.expect(3);
+
+  set(config, 'isDisabledOnInput', true);
+
+  const service = this.subject();
+
+  const promises = ['input', 'textarea', 'select'].map((elementName) => {
+    return new Promise(async(resolve) => {
+      const element = document.createElement(elementName);
+      document.body.appendChild(element);
+
+      let macroAttrs = assign({}, firstMacroAttrs, { element });
+      service.addMacro(macroAttrs);
+
+      focus(element);
+      await dispatchEvent(element, firstMacroEvent);
+
+      assert.equal(firstMacroCallCount, 0, 'callback is not called');
+      element.remove();
+      resolve();
+    });
   });
-
-  const combos = [
-    Combo.create({
-      eventName: 'some.eventName.2',
-      keys: [
-        'meta',
-        'shift',
-        'k',
-      ],
-      priority: 0,
-    }),
-    Combo.create({
-      eventName: 'some.eventName',
-      keys: [
-        'meta',
-        'k',
-      ],
-      callback() {
-        assert.ok(true, 'event is called.');
-      },
-      priority: 0,
-    }),
-  ];
-  set(service, 'combos', combos);
-  set(service, 'matchFound', false);
-  reset(event);
-  set(event, 'metaKey', true);
-  service.handler(event);
+  await Promise.all(promises);
 });
