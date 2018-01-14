@@ -1,9 +1,5 @@
+import { get } from '@ember/object';
 import config from '../config/environment';
-import Ember from 'ember';
-
-const {
-  get,
-} = Ember;
 
 export function initialize(application) {
   const keyManagerConfig = get(config, 'keyManagerConfig') || {};

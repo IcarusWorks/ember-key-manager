@@ -1,196 +1,161 @@
-import Ember from 'ember';
-import keyCodes from '../utils/key-codes';
-import modifierKeys from '../utils/modifier-keys';
-import modifierKeyCodes from '../utils/modifier-key-codes';
-
-const {
-  $,
-  computed,
+import Service from '@ember/service';
+import { getOwner } from '@ember/application';
+import { assign } from '@ember/polyfills';
+import Macro from '../utils/macro';
+import {
   get,
-  getOwner,
-  run,
+  getProperties,
   set,
   setProperties,
-} = Ember;
-const eventNamespace = 'key-manager';
+} from '@ember/object';
+import { debounce } from '@ember/runloop';
+
 const inputElements = [
-  'input',
-  'textarea',
-  'select',
-  "[contenteditable='true']",
+  'INPUT',
+  'SELECT',
+  'TEXTAREA',
 ];
 
-import Combo from '../utils/combo';
+const isInputElement = (element) => {
+  const isContentEditable = element.isContentEditable;
+  const isInput = inputElements.includes(element.tagName);
 
-export default Ember.Service.extend({
-  clearExecutionKeysLater: null,
-  executionKeyClearInterval: 2000,
-  matchFound: false,
-  uid: 0,
-  altKey: false,
-  ctrlKey: false,
-  metaKey: false,
-  shiftKey: false,
+  return isContentEditable || isInput;
+};
 
-  // config options
-  disableOnInput: false,
+export default Service.extend({
+  isDisabledOnInput: false, // Config option
 
   init() {
-    this._super(...arguments);
-    set(this, 'combos', []);
-    this._resetDownKeys();
-    this._registerConfig();
+    this.keydownMacros = [];
+    this.keyupMacros = [];
+    this._registerConfigOptions();
   },
 
-  register({keys, name, selector=$(document), downCallback, upCallback, priority=0, disableOnInput}) {
-    disableOnInput = disableOnInput || get(this, 'disableOnInput');
+  addMacro(options) {
+    const macroAttrs = this._mergeConfigDefaults(options);
+    const macro = Macro.create();
+    macro.setup(macroAttrs);
 
-    ['up', 'down'].forEach((direction) => {
-      const uid = get(this, 'uid');
-      const callback = direction === 'up' ? upCallback : downCallback;
-      const eventName = `key${direction}.${eventNamespace}.${name}.${uid}`;
-      const combo = Combo.create({
-        callback,
-        direction,
-        eventName,
-        keys,
-        name,
-        selector,
-        priority,
-        uid,
-        disableOnInput,
-      });
+    const keyEvent = get(macro, 'keyEvent');
+    const element = get(macro, 'element');
+    this._addEventListener(element, keyEvent);
 
-      get(this, 'combos').pushObject(combo);
-      selector.on(eventName, {
-        eventName,
-      }, run.bind(this, this.handler));
-      this.incrementProperty('uid');
-    });
+    const macros = get(this, `${keyEvent}Macros`);
+    macros.pushObject(macro);
+
+    return macro;
   },
 
-  deregister({name}) {
-    const combos = get(this, 'combos');
-    const comboMatches = combos.filterBy('name', name);
-
-    comboMatches.forEach((comboMatch) => {
-      const {
-        eventName,
-        selector,
-      } = comboMatch;
-
-      selector.off(eventName);
-      combos.removeObject(comboMatch);
-    });
+  _mergeConfigDefaults(attrs) {
+    const isDisabledOnInput = get(this, 'isDisabledOnInput');
+    return assign({ isDisabledOnInput }, attrs);
   },
 
-  findMatchingCombo(event) {
-    try {
-      const { data, keyCode } = event;
-      const { eventName = null } = data;
-
-      modifierKeys.forEach((key) => {
-        const prop = `${key}Key`;
-        set(this, prop, event[prop]);
-      });
-
-      if (!modifierKeyCodes.includes(keyCode)) {
-        get(this, 'downKeys').addObject(keyCode);
-      }
-
-      return this._findComboByName(eventName);
-    } finally {
-      this._clearExecutionKeys(event);
+  _addEventListener(element, keyEvent) {
+    const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
+    if (!hasListenerForElementAndKeyEvent) {
+      element.addEventListener(keyEvent, this);
     }
   },
 
-  handler(event) {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) { return; }
+  removeMacro(macro) {
+    const element = get(macro, 'element');
+    const keyEvent = get(macro, 'keyEvent');
+    const macros = get(this, `${keyEvent}Macros`);
 
-    const combo = this.findMatchingCombo(event);
-    const runLoopGuard = !get(this, 'matchFound');
+    macros.removeObject(macro);
 
-    if (combo && runLoopGuard) {
-      set(this, 'matchFound', true);
-      run.next(() => {
-        set(this, 'matchFound', false);
-      });
+    this._removeEventListenter(element, keyEvent);
+  },
 
-      const isNotOnInput = inputElements.every(e => !$(document.activeElement).is(e));
-      if (!get(combo, 'disableOnInput') || isNotOnInput) {
-        const callback = get(combo, 'callback');
-        if (callback) {
-          callback(event);
+  _removeEventListenter(element, keyEvent) {
+    const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
+    if (!hasListenerForElementAndKeyEvent) {
+      element.removeEventListener(keyEvent, this);
+    }
+  },
+
+  handleEvent(event) {
+    const isServiceDestroyed = get(this, 'isDestroyed') || get(this, 'isDestroying');
+
+    if (isServiceDestroyed) {
+      return false;
+    }
+
+    set(this, 'event', event);
+
+    debounce(this, this._handleEvent, 100);
+  },
+
+  _handleEvent() {
+    const event = get(this, 'event');
+    const isKeydown = event.type === 'keydown';
+    const isKeyup = event.type === 'keyup';
+
+    if (isKeydown || isKeyup) {
+      const allEventModifierKeys = {
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+      }
+      const eventModifierKeys = Object.keys(allEventModifierKeys)
+        .filter((key) => {
+          return allEventModifierKeys[key] !== false;
+        });
+      const matchingMacro = this._findMatchingMacro(
+        event.target,
+        event.key,
+        eventModifierKeys,
+        event.type
+      );
+
+      if (matchingMacro) {
+        const isTargetInput = isInputElement(event.target);
+        const isDisabled = get(matchingMacro, 'isDisabledOnInput') && isTargetInput;
+
+        if (!isDisabled) {
+          get(matchingMacro, 'callback')(event);
         }
       }
     }
   },
 
-  executionKeys: computed(function() {
-    return Object.keys(keyCodes).map((key) => {
-      return keyCodes[key];
-    }).reject((code) => {
-      return modifierKeyCodes.includes(code);
+  _findMacroWithElementAndKeyEvent(eventElement, eventKeyEvent) {
+    return get(this, `${eventKeyEvent}Macros`).find((macro) => {
+      const element = get(macro, 'element');
+      return eventElement === element;
     });
-  }),
-
-  _clearExecutionKeys(event) {
-    if (event.type === 'keyup') {
-      get(this, 'downKeys').removeObject(event.keyCode);
-    }
-
-    get(this, 'downKeys').removeObjects(this.get('executionKeys'));
   },
 
-  _findComboByName(eventName) {
-    const combos = get(this, 'combos');
-    const comboWithName = combos.findBy('eventName', eventName);
+  _findMatchingMacro(eventElement, eventExecutionKey, eventModifierKeys, eventKeyEvent) {
+    const matchingMacros = get(this, `${eventKeyEvent}Macros`).filter((macro) => {
+      const {
+        element,
+        executionKey,
+        modifierKeys,
+      } = getProperties(macro, ['element', 'executionKey', 'modifierKeys']);
+      const hasElementMatch = eventElement === element;
+      const hasExecutionKeyMatch = eventExecutionKey === executionKey;
+      const hasModifierKeysMatch = eventModifierKeys.every((key) => {
+        return modifierKeys.includes(key);
+      });
 
-    if (!this.isComboKeyMatch(comboWithName)) { return; }
+      return hasElementMatch &&
+        hasExecutionKeyMatch &&
+        hasModifierKeysMatch;
+    });
+    const sortedMatchingMacros = matchingMacros.sort((a, b) => {
+      return get(b, 'priority') - get(a, 'priority');
+    });
 
-    const highestPriorityCombo = this._combosWithKeys(combos)
-          .sortBy('priority')
-          .get('lastObject');
-
-    // Matching Event is Combo with Highest Priority
-    if (get(comboWithName, 'priority') >= get(highestPriorityCombo, 'priority')) {
-      return comboWithName;
-    }
+    return sortedMatchingMacros[0];
   },
 
-  _combosWithKeys(combos) {
-    return combos.filter(c => this.isComboKeyMatch(c));
-  },
-
-  pressedModifiers: computed('altKey', 'ctrlKey', 'metaKey', 'shiftKey', {
-    get() {
-      return modifierKeys.filter(key => get(this, `${key}Key`));
-    }
-  }),
-
-  isComboKeyMatch(combo) {
-    if (!combo) { return; }
-
-    const downKeys = get(this, 'downKeys');
-    const pressedModifiers = get(this, 'pressedModifiers');
-
-    let comboKeys = get(combo, 'keys');
-    let comboModifierKeys = get(combo, 'modifierKeys');
-    let comboExecutionKeys = get(combo, 'executionKeys');
-
-    return (comboKeys.length === pressedModifiers.length + downKeys.length) &&
-    // Filter Combos with Matching Modifier Keys
-    comboModifierKeys.every(k => pressedModifiers.includes(k)) &&
-    // Filter Combos with Matching Execution Keys
-    comboExecutionKeys.every(k => downKeys.includes(keyCodes[k]));
-  },
-
-  _resetDownKeys() {
-    set(this, 'downKeys', []);
-  },
-
-  _registerConfig() {
+  _registerConfigOptions() {
     const config = getOwner(this).lookup('main:key-manager-config');
+
     if (config) {
       setProperties(this, config);
     }

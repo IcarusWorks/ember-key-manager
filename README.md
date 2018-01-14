@@ -11,7 +11,7 @@
 [ember-observer-badge]: http://emberobserver.com/badges/ember-key-manager.svg
 [ember-observer-badge-url]: http://emberobserver.com/addons/ember-key-manager
 
-A service for (un)binding keyboard up and down events.
+A service for (un)binding keyboard `keyup` and `keydown` events.
 
 ## Installation
 
@@ -27,76 +27,76 @@ Set global options in a `keyManagerConfig` object in your application's `config/
 
 ```js
   keyManagerConfig: {
-    disableOnInput: true,
+    isDisabledOnInput: true,
   },
 ```
 
-#### `disableOnInput`
+#### `isDisabledOnInput`
 
-Defaults to false. Set the global option to true to change the default. This can still
-be overridden by passing in the flag on the `register` method.
+Defaults to false. Set the global option to true to change the default. The
+`isDisabledOnInput` option available on each macro takes precedence over this
+global config option.
 
 
 ### Public Methods
 
-#### `register({keys, name, selector=$(document), downCallback, upCallback, priority=0, disableOnInput})`
+#### `addMacro({callback, element=document.body, executionKey, isDisabledOnInput, modifierKeys, priority=0, keyEvent})`
 
 Accepts an object with the following attributes:
 
 | Name       | Type          | Required | Default  | Description
 | ---------- | ------------- | -------- | -------- | --------- |
-| `keys`     | array of strings | Yes      | `<none>` | An array of keys that comprise the shortcut e.g., `['meta', 'enter']`. If `keys` contains multiple modifier keys, they still comprise one shortcut e.g., `['meta', 'shift', 'enter']` is a single shortcut that executes when all three of those keys are pressed. |
-| `name`     | string | Yes      | `<none>` | A unique string by which you can identify – and `deregister` – the shortcut. |
-| `selector`     | jQuery selector | No      | `$(document)` | A jQuery selector by which to scope the shortcut. |
-| `downCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keydown event is fired. |
-| `upCallback`     | function | No      | `<none>` | A function to be called when the shortcut keys are matched and the keyup event is fired. |
-| `priority`     | integer | No      | `0` | An integer used to prioritize shortcuts should the shortcuts with the same `keys` be bound at the same time. For example, you bind the `escape` key on a route and the route's template renders a component that also binds the `escape` key. Highest priority takes precedence. |
-| `disableOnInput`     | boolean | No      | `false` | A boolean to determine whether the callback should be fired when an `input`, `textarea`, or `select` element is active.
+| `callback` | `Function` | Yes | `null` | A function to be called when the macro keys are matched, the `keyEvent` event is fired, and the scope defined by `element` is correct. When called, the `callback` is called with the keyboard `event` that triggered the macro. |
+| `element` | `Element` | No | `document.body` | A DOM element by which to scope the macro. |
+| `executionKey` | `String` | Yes | `''` | A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out. |
+| `isDisabledOnInput` | `Boolean` | No | `false` | A boolean to determine if a macro's the callback should be fired when a `contentEditable`, `input`, `textarea`, or `select` element is focused. |
+| `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `Alt`, `Control`, `Meta`, `Shift`. |
+| `priority` | `Number` | No | `0` | An integer used to prioritize macros if there's more than one macro with the same `keys` listening at the same time. For example, you add a macro with the `escape` key on a route and the route's template renders a component that also binds a macro with the `escape` key. Highest priority takes precedence. |
+| `keyEvent` | `String` | Yes | `null` | Dictates which key event is used for the macro. Options are: `keydown`, `keyup`.
 
-#### `deregister({name})`
+#### `removeMacro()`
 
-Accepts an object with the following attribute:
-
-| Name       | Type          | Required | Default  | Description
-| ---------- | ------------- | -------- | -------- | --------- |
-| `name`     | string | Yes      | `<none>` | The same string with which the shortcut was registered in the `register()` call. |
+Accepts a macro object that is returned from calling `addMacro()`.
 
 ### Key Names
 
-The full list of key names can be [found here](https://github.com/IcarusWorks/ember-key-manager/blob/master/addon/utils/key-codes.js).
+A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out.
 
-The modifier keys – those that don't trigger execution of a shortcut – can be [found here](https://github.com/IcarusWorks/ember-key-manager/blob/master/addon/utils/modifier-key-codes.js).
+Allowed modifier key names are: `Alt`, `Control`, `Meta`, `Shift`.
 
 ### Examples
 
 Here's an example usage on a component:
 
 ```js
-import Ember from 'ember';
-
-const {
+import Component from '@ember/component';
+import {
   get,
-  inject,
-} = Ember;
+  set,
+} from '@ember/object';
+import { inject as injectService } from '@ember/service';
+import {
+  bind,
+} from '@ember/runloop';
 
-export default Ember.Component.extend({
-  keyManager: inject.service(),
+export default Component.extend({
+  keyManager: injectService(),
 
   didInsertElement() {
-    get(this, 'keyManager').register({
-      keys: ['escape'],
-      name: 'search-modal',
-      downCallback: run.bind(this, function() {
+    const closeModalMacro = get(this, 'keyManager').addMacro({
+      callback: bind(this, function() {
         this.send('toggleModal');
       }),
+      executionKey: 'Escape',
       priority: 10,
+      type: 'keydown',
     });
+    set(this, 'closeModalMacro', 'closeModalMacro');
   },
 
   willDestroyElement() {
-    get(this, 'keyManager').deregister({
-      name: 'search-modal', // This name must match the name the binding was registered with above.
-    });
+    const closeModalMacro = get(this, 'closeModalMacro');
+    get(this, 'keyManager').removeMacro(closeModalMacro);
   },
 
   actions: {
@@ -110,38 +110,35 @@ export default Ember.Component.extend({
 And an example on a route:
 
 ```js
-import Ember from 'ember';
+import Route from '@ember/routing/route';
+import { inject as injectService } from '@ember/service';
+import { get, set } from '@ember/object';
 
-const {
-  get,
-  inject,
-} = Ember;
-
-export default Ember.Route.extend({
-  keyManager: inject.service(),
+export default Route.extend({
+  keyManager: injectService(),
 
   actions: {
     didTransition() {
       this._super(...arguments);
 
-      get(this, 'keyManager').register({
-        keys: ['escape'],
-        name: 'fancy-route',
-        downCallback: run.bind(this, this._redirectToLaLaLand),
+      const redirectMacro = get(this, 'keyManager').addMacro({
+        callback: bind(this, this._redirectToLaLaLand),
+        executionKey: 'Escape',
         priority: 100,
+        type: 'keydown',
       });
+      set(this, 'redirectMacro', redirectMacro);
     },
 
     willTransition() {
       this._super(...arguments);
 
-      get(this, 'keyManager').deregister({
-        name: 'fancy-route',
-      });
+      const redirectMacro = get(this, 'redirectMacro');
+      get(this, 'keyManager').removeMacro(redirectMacro);
     },
   },
 
-  // The `event` that's returned as a parameter here is the JS keyboard event.
+  // The `callback` is called with the keyboard `event`.
   _redirectToLaLaLand(event) {
     if (event) {
       event.preventDefault();
