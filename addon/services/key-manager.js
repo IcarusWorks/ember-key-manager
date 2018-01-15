@@ -141,10 +141,12 @@ export default Service.extend({
       const hasModifierKeysMatch = eventModifierKeys.every((key) => {
         return modifierKeys.includes(key);
       });
+      const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 
       return hasElementMatch &&
         hasExecutionKeyMatch &&
-        hasModifierKeysMatch;
+        hasModifierKeysMatch &&
+        hasModifierKeyCount;
     });
     const sortedMatchingMacros = matchingMacros.sort((a, b) => {
       return get(b, 'priority') - get(a, 'priority');
