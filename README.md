@@ -47,7 +47,7 @@ Accepts an object with the following attributes:
 | Name       | Type          | Required | Default  | Description
 | ---------- | ------------- | -------- | -------- | --------- |
 | `callback` | `Function` | Yes | `null` | A function to be called when the macro keys are matched, the `keyEvent` event is fired, and the scope defined by `element` is correct. When called, the `callback` is called with the keyboard `event` that triggered the macro. |
-| `element` | `Element` | No | `document.body` | A DOM element by which to scope the macro. |
+| `element` | `Element` | No | `document.body` | A DOM element by which to scope the macro. Events triggered on _or_ within this element will fire the macro's callback. |
 | `executionKey` | `String` | Yes | `''` | A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out. |
 | `isDisabledOnInput` | `Boolean` | No | `false` | A boolean to determine if a macro's the callback should be fired when a `contentEditable`, `input`, `textarea`, or `select` element is focused. |
 | `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `altKey`, `ctrlKey`, `metaKey`, `shiftKey`. |

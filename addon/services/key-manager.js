@@ -136,7 +136,7 @@ export default Service.extend({
         executionKey,
         modifierKeys,
       } = getProperties(macro, ['element', 'executionKey', 'modifierKeys']);
-      const hasElementMatch = eventElement === element;
+      const hasElementMatch = element === eventElement || element.contains(eventElement);
       const hasExecutionKeyMatch = eventExecutionKey === executionKey;
       const hasModifierKeysMatch = eventModifierKeys.every((key) => {
         return modifierKeys.includes(key);
