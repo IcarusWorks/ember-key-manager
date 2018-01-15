@@ -89,7 +89,7 @@ export default Component.extend({
       }),
       executionKey: 'Escape',
       priority: 10,
-      type: 'keydown',
+      keyEvent: 'keydown',
     });
     set(this, 'closeModalMacro', 'closeModalMacro');
   },
@@ -125,7 +125,7 @@ export default Route.extend({
         callback: bind(this, this._redirectToLaLaLand),
         executionKey: 'Escape',
         priority: 100,
-        type: 'keydown',
+        keyEvent: 'keydown',
       });
       set(this, 'redirectMacro', redirectMacro);
     },
