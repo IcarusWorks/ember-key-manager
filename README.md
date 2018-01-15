@@ -50,7 +50,7 @@ Accepts an object with the following attributes:
 | `element` | `Element` | No | `document.body` | A DOM element by which to scope the macro. |
 | `executionKey` | `String` | Yes | `''` | A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out. |
 | `isDisabledOnInput` | `Boolean` | No | `false` | A boolean to determine if a macro's the callback should be fired when a `contentEditable`, `input`, `textarea`, or `select` element is focused. |
-| `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `Alt`, `Control`, `Meta`, `Shift`. |
+| `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `altKey`, `ctrlKey`, `metaKey`, `shiftKey`. |
 | `priority` | `Number` | No | `0` | An integer used to prioritize macros if there's more than one macro with the same `keys` listening at the same time. For example, you add a macro with the `escape` key on a route and the route's template renders a component that also binds a macro with the `escape` key. Highest priority takes precedence. |
 | `keyEvent` | `String` | Yes | `null` | Dictates which key event is used for the macro. Options are: `keydown`, `keyup`.
 
@@ -62,7 +62,7 @@ Accepts a macro object that is returned from calling `addMacro()`.
 
 A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out.
 
-Allowed modifier key names are: `Alt`, `Control`, `Meta`, `Shift`.
+Allowed modifier key names are: `altKey`, `ctrlKey`, `metaKey`, `shiftKey`.
 
 ### Examples
 
