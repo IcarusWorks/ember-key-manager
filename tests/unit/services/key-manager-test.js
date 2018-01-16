@@ -177,11 +177,11 @@ test('`addMacro()`', async function(assert) {
   await dispatchEvent(document.body, firstMacroEvent);   // NO  `assert`
   await dispatchEvent(document.body, secondMacroEvent);  // YES `assert`
   await dispatchEvent(document.body, secondMacroEvent);  // YES `assert`
-  await dispatchEvent(div, secondMacroEvent);            // NO  `assert`
+  await dispatchEvent(div, secondMacroEvent);            // YES `assert`
   await dispatchEvent(document.body, fifthMacroEvent);   // YES `assert`
 
   assert.equal(firstMacroCallCount, 2, 'firstMacro callback is called twice directly');
-  assert.equal(secondMacroCallCount, 3, 'secondMacro callback is called twice directly and once by fifthMacro because it has a higher priority')
+  assert.equal(secondMacroCallCount, 4, 'secondMacro callback is called twice directly, once by the event triggered on a `div` within its `element`, once by fifthMacro because it has a higher priority')
   assert.equal(thirdMacroCallCount, 0, 'thirdMacro callback is not called');
   assert.equal(fourthMacroCallCount, 0, 'fourthMacro callback is not called');
   assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called');
