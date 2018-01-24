@@ -104,20 +104,23 @@ export default Service.extend({
         .filter((key) => {
           return allEventModifierKeys[key] !== false;
         });
-      const matchingMacro = this._findMatchingMacro(
+      const matchingMacros = this._findMatchingMacros(
         event.target,
         event.key,
         eventModifierKeys,
         event.type
       );
 
-      if (matchingMacro) {
+      if (matchingMacros) {
         const isTargetInput = isInputElement(event.target);
-        const isDisabled = get(matchingMacro, 'isDisabledOnInput') && isTargetInput;
 
-        if (!isDisabled) {
-          get(matchingMacro, 'callback')(event);
-        }
+        matchingMacros.forEach((matchingMacro) => {
+          const isDisabled = get(matchingMacro, 'isDisabledOnInput') && isTargetInput;
+
+          if (!isDisabled) {
+            get(matchingMacro, 'callback')(event);
+          }
+        })
       }
     }
   },
@@ -129,7 +132,7 @@ export default Service.extend({
     });
   },
 
-  _findMatchingMacro(eventElement, eventExecutionKey, eventModifierKeys, eventKeyEvent) {
+  _findMatchingMacros(eventElement, eventExecutionKey, eventModifierKeys, eventKeyEvent) {
     const matchingMacros = get(this, `${eventKeyEvent}Macros`).filter((macro) => {
       const {
         element,
@@ -148,11 +151,11 @@ export default Service.extend({
         hasModifierKeysMatch &&
         hasModifierKeyCount;
     });
-    const sortedMatchingMacros = matchingMacros.sort((a, b) => {
-      return get(b, 'priority') - get(a, 'priority');
-    });
 
-    return sortedMatchingMacros[0];
+    const highestPriority = matchingMacros.mapBy('priority')
+      .reduce((max, priority) => Math.max(max, priority), -Infinity);
+
+    return matchingMacros.filter((macro) => get(macro, 'priority') === highestPriority);
   },
 
   _registerConfigOptions() {
