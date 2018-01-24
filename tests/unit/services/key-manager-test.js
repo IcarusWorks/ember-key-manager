@@ -474,3 +474,36 @@ test('`isDisabledOnInput` config option disables callback on input elements', as
   });
   await Promise.all(promises);
 });
+
+test('dispatchEvent triggers all matching macro callbacks', async function(assert) {
+  const service = this.subject();
+
+  service.addMacro(firstMacroAttrs);
+  service.addMacro(firstMacroAttrs);
+  service.addMacro(secondMacroAttrs);
+
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 2, 'all matches of firstMacro are called');
+  assert.equal(secondMacroCallCount, 0, 'secondMacro callback is not called')
+});
+
+test('dispatchEvent triggers all matching macro callbacks with highest priority', async function(assert) {
+  const service = this.subject();
+
+  let isCalled = false;
+  const higherPriorityMacro = Object.assign({}, firstMacroAttrs, {
+    priority: 100,
+    callback() {
+      isCalled = true;
+    },
+  });
+  service.addMacro(firstMacroAttrs);
+  service.addMacro(firstMacroAttrs);
+  service.addMacro(higherPriorityMacro);
+
+  await dispatchEvent(div, firstMacroEvent);
+
+  assert.equal(firstMacroCallCount, 0, 'other firstMacro callbacks are not called');
+  assert.ok(isCalled, 'higher priority macro is called');
+});
