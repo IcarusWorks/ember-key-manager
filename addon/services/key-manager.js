@@ -9,6 +9,9 @@ import {
   setProperties,
 } from '@ember/object';
 import { debounce } from '@ember/runloop';
+import {
+  filterBy,
+} from '@ember/object/computed';
 
 const inputElements = [
   'INPUT',
@@ -26,9 +29,11 @@ const isInputElement = (element) => {
 export default Service.extend({
   isDisabledOnInput: false, // Config option
 
+  keydownMacros: filterBy('macros', 'keyEvent', 'keydown'),
+  keyupMacros: filterBy('macros', 'keyEvent', 'keyup'),
+
   init() {
-    this.keydownMacros = [];
-    this.keyupMacros = [];
+    this.macros = [];
     this._registerConfigOptions();
   },
 
@@ -41,7 +46,7 @@ export default Service.extend({
     const element = get(macro, 'element');
     this._addEventListener(element, keyEvent);
 
-    const macros = get(this, `${keyEvent}Macros`);
+    const macros = get(this, 'macros');
     macros.pushObject(macro);
 
     return macro;
@@ -62,7 +67,7 @@ export default Service.extend({
   removeMacro(macro) {
     const element = get(macro, 'element');
     const keyEvent = get(macro, 'keyEvent');
-    const macros = get(this, `${keyEvent}Macros`);
+    const macros = get(this, 'macros');
 
     macros.removeObject(macro);
 
@@ -74,6 +79,14 @@ export default Service.extend({
     if (!hasListenerForElementAndKeyEvent) {
       element.removeEventListener(keyEvent, this);
     }
+  },
+
+  disable(recipient) {
+    this._setDisabledState(recipient, true);
+  },
+
+  enable(recipient) {
+    this._setDisabledState(recipient, false);
   },
 
   handleEvent(event) {
@@ -115,7 +128,8 @@ export default Service.extend({
         const isTargetInput = isInputElement(event.target);
 
         matchingMacros.forEach((matchingMacro) => {
-          const isDisabled = get(matchingMacro, 'isDisabledOnInput') && isTargetInput;
+          const isDisabled = get(matchingMacro, 'isDisabled') ||
+            (get(matchingMacro, 'isDisabledOnInput') && isTargetInput);
 
           if (!isDisabled) {
             get(matchingMacro, 'callback')(event);
@@ -164,5 +178,18 @@ export default Service.extend({
     if (config) {
       setProperties(this, config);
     }
+  },
+
+  _setDisabledState(recipient, isDisabled) {
+    if (typeof recipient === 'string') {
+      this._setGroupDisabledState(recipient, isDisabled);
+    } else {
+      set(recipient, 'isDisabled', isDisabled);
+    }
+  },
+
+  _setGroupDisabledState(groupName, isDisabled) {
+    get(this, 'macros').filterBy('groupName', groupName)
+      .setEach('isDisabled', isDisabled);
   },
 });

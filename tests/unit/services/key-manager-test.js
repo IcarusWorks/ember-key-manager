@@ -36,6 +36,7 @@ const firstMacroAttrs = {
   element: div,
   modifierKeys: ['shiftKey'],
   keyEvent: 'keydown',
+  groupName: 'group 1',
 };
 
 const secondMacroAttrs = {
@@ -46,6 +47,7 @@ const secondMacroAttrs = {
   modifierKeys: ['ctrlKey', 'altKey'],
   priority: 100,
   keyEvent: 'keydown',
+  groupName: 'group 1',
 };
 
 // thirdMacro
@@ -141,11 +143,10 @@ moduleFor('service:key-manager', 'Unit | Service | key manager', {
   },
 });
 
-test('`init()` sets `keydownMacros` `keyupMacros to empty arrays`', function(assert) {
+test('`init()` sets `macros` to an empty array', function(assert) {
   const service = this.subject();
 
-  assert.deepEqual(get(service, 'keydownMacros'), []);
-  assert.deepEqual(get(service, 'keyupMacros'), []);
+  assert.deepEqual(get(service, 'macros'), []);
 });
 
 test('`init()` sets defaults from config', function(assert) {
@@ -506,4 +507,64 @@ test('dispatchEvent triggers all matching macro callbacks with highest priority'
 
   assert.equal(firstMacroCallCount, 0, 'other firstMacro callbacks are not called');
   assert.ok(isCalled, 'higher priority macro is called');
+});
+
+test('disabling a macro or group', async function(assert) {
+  const service = this.subject();
+
+  const macro = service.addMacro(firstMacroAttrs);
+  service.addMacro(secondMacroAttrs);
+  service.addMacro(thirdMacroAttrs);
+
+  service.disable(macro);
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(div, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+
+  assert.equal(firstMacroCallCount, 0, 'firstMacro is disabled');
+  assert.equal(secondMacroCallCount, 1, 'secondMacro is not disabled');
+  assert.equal(thirdMacroCallCount, 1, 'thirdMacro is not disabled');
+
+  service.disable('group 1');
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(div, secondMacroEvent);
+  await dispatchEvent(div, thirdMacroEvent);
+
+  assert.equal(firstMacroCallCount, 0, 'firstMacro is still disabled');
+  assert.equal(secondMacroCallCount, 1, 'secondMacro is now disabled');
+  assert.equal(thirdMacroCallCount, 2, 'thirdMacro is not disabled');
+});
+
+test('enabling a macro or group', async function(assert) {
+  const service = this.subject();
+
+  const macro = service.addMacro(firstMacroAttrs);
+  service.addMacro(secondMacroAttrs);
+  service.addMacro(thirdMacroAttrs);
+
+  service.disable('group 1');
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(div, secondMacroEvent);
+
+  assert.equal(firstMacroCallCount, 0, 'firstMacro is disabled');
+  assert.equal(secondMacroCallCount, 0, 'secondMacro is disabled');
+
+  service.enable(macro);
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(div, secondMacroEvent);
+
+  assert.equal(firstMacroCallCount, 1, 'firstMacro is not disabled');
+  assert.equal(secondMacroCallCount, 0, 'secondMacro is still disabled');
+
+  service.enable('group 1');
+
+  await dispatchEvent(div, firstMacroEvent);
+  await dispatchEvent(div, secondMacroEvent);
+
+  assert.equal(firstMacroCallCount, 2, 'firstMacro is still not disabled');
+  assert.equal(secondMacroCallCount, 1, 'secondMacro is not disabled');
 });
