@@ -42,7 +42,9 @@ global config option.
 
 #### `addMacro({callback, element=document.body, executionKey, isDisabledOnInput, modifierKeys, priority=0, keyEvent})`
 
-Accepts an object with the following attributes:
+A 'macro' is made of a combination of: zero or more `modifierKeys`, one `executionKey`, a callback function to execute when the macro is matched, the type of `keyEvent`, and a few optional attributes described below. `addMacro()` sets up this binding between keys and callback. When the exact combination of the `executionKey`, `modifierKeys`, and `eventType` are matched, the callback is triggered.
+
+`addMacro()` accepts an object with the following attributes:
 
 | Name       | Type          | Required | Default  | Description
 | ---------- | ------------- | -------- | -------- | --------- |
@@ -56,17 +58,31 @@ Accepts an object with the following attributes:
 | `groupName` | `String` | No | `null` | Used with disabling and enabling a group of macros.
 | `isDisabled` | `String` | No | `false` | Determines whether the macro's callback will be triggered on keyEvent match.
 
-#### `removeMacro()`
+#### `removeMacro(macro)`
 
 Accepts a macro object that is returned from calling `addMacro()`.
 
-#### `disable()`
+| Name       | Type          | Required | Default  | Description
+| ---------- | ------------- | -------- | -------- | --------- |
+| `macro` | `Object` | Yes | `undefined` | A macro object that is returned from calling `addMacro()`. |
+
+#### `disable(macro or groupName)`
 
 Accepts a macro object that is returned from calling `addMacro()` or a string as a group name. If a macro, it disables the callback for that individual macro from being called on match. If it is a group name, it looks for all macros with a matching group name and disables them. When a macro is disabled, it will remain disabled till you call `enable()`.
 
-#### `enable()`
+| Name       | Type          | Required | Default  | Description
+| ---------- | ------------- | -------- | -------- | --------- |
+| `macro` | `Object` | Yes (or `groupName`) | `undefined` | A macro object that is returned from calling `addMacro()`. |
+| `groupName` | `String` | Yes (or `macro`) | `undefined` | A string that was used as a `groupName` on one or more of the macros added with `addMacro()`.
+
+#### `enable(macro or groupName)`
 
 Accepts a macro object that is returned from calling `addMacro()` or a string as a group name. If a macro, it enables the callback for that individual macro, ensuring that the callback is called on match. If it is a group name, it looks for all macros with a matching group name and enables them.
+
+| Name       | Type          | Required | Default  | Description
+| ---------- | ------------- | -------- | -------- | --------- |
+| `macro` | `Object` | Yes (or `groupName`) | `undefined` | A macro object that is returned from calling `addMacro()`. |
+| `groupName` | `String` | Yes (or `macro`) | `undefined` | A string that was used as a `groupName` on one or more of the macros added with `addMacro()`.
 
 ### Key Names
 
