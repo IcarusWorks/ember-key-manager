@@ -53,10 +53,20 @@ Accepts an object with the following attributes:
 | `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `altKey`, `ctrlKey`, `metaKey`, `shiftKey`. |
 | `priority` | `Number` | No | `0` | An integer used to prioritize macros if there's more than one macro with the same `keys` listening at the same time. For example, you add a macro with the `escape` key on a route and the route's template renders a component that also binds a macro with the `escape` key. Highest priority takes precedence. |
 | `keyEvent` | `String` | Yes | `null` | Dictates which key event is used for the macro. Options are: `keydown`, `keyup`.
+| `groupName` | `String` | No | `null` | Used with disabling and enabling a group of macros.
+| `isDisabled` | `String` | No | `false` | Determines whether the macro's callback will be triggered on keyEvent match.
 
 #### `removeMacro()`
 
 Accepts a macro object that is returned from calling `addMacro()`.
+
+#### `disable()`
+
+Accepts a macro object that is returned from calling `addMacro()` or a string as a group name. If a macro, it disables the callback for that individual macro from being called on match. If it is a group name, it looks for all macros with a matching group name and disables them. When a macro is disabled, it will remain disabled till you call `enable()`.
+
+#### `enable()`
+
+Accepts a macro object that is returned from calling `addMacro()` or a string as a group name. If a macro, it enables the callback for that individual macro, ensuring that the callback is called on match. If it is a group name, it looks for all macros with a matching group name and enables them.
 
 ### Key Names
 

@@ -12,6 +12,8 @@ const defaultAttrs = {
   modifierKeys: [],
   priority: 0,
   keyEvent: null,
+  groupName: null,
+  isDisabled: false,
 }
 
 export default EmberObject.extend({
