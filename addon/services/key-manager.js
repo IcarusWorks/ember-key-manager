@@ -2,17 +2,21 @@ import Service from '@ember/service';
 import { getOwner } from '@ember/application';
 import { assign } from '@ember/polyfills';
 import Macro from '../utils/macro';
-import MODIFIER_KEYS from '../utils/modifier-keys';
+import { TO_MODIFIER, TO_KEY } from '../utils/modifier-keys';
 import {
   get,
   getProperties,
   set,
   setProperties,
 } from '@ember/object';
-import { debounce } from '@ember/runloop';
 import {
   filterBy,
 } from '@ember/object/computed';
+import { warn } from '@ember/debug';
+import { isPresent, } from '@ember/utils';
+import {
+  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING,
+} from 'ember-key-manager/utils/warning-messages';
 
 const inputElements = [
   'INPUT',
@@ -44,6 +48,7 @@ export default Service.extend({
     macro.setup(macroAttrs);
 
     const keyEvent = get(macro, 'keyEvent');
+    this._handleModifiersOnKeyup(macro, keyEvent);
     const element = get(macro, 'element');
     this._addEventListener(element, keyEvent);
 
@@ -51,6 +56,12 @@ export default Service.extend({
     macros.pushObject(macro);
 
     return macro;
+  },
+
+  _handleModifiersOnKeyup({ modifierKeys }, keyEvent) {
+    if (keyEvent === 'keyup' && isPresent(modifierKeys)) {
+      warn(MODIFIERS_ON_KEYUP_WARNING, false, {id: 'keyup-with-modifiers'});
+    }
   },
 
   _mergeConfigDefaults(attrs) {
@@ -91,19 +102,10 @@ export default Service.extend({
   },
 
   handleEvent(event) {
-    const isServiceDestroyed = get(this, 'isDestroyed') || get(this, 'isDestroying');
-
-    if (isServiceDestroyed) {
+    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
       return false;
     }
 
-    set(this, 'event', event);
-
-    debounce(this, this._handleEvent, 100);
-  },
-
-  _handleEvent() {
-    const event = get(this, 'event');
     const isKeydown = event.type === 'keydown';
     const isKeyup = event.type === 'keyup';
 
@@ -127,6 +129,7 @@ export default Service.extend({
 
       if (matchingMacros) {
         const isTargetInput = isInputElement(event.target);
+        event.stopPropagation();
 
         matchingMacros.forEach((matchingMacro) => {
           const isDisabled = get(matchingMacro, 'isDisabled') ||
@@ -155,10 +158,11 @@ export default Service.extend({
         modifierKeys,
       } = getProperties(macro, ['element', 'executionKey', 'modifierKeys']);
       const hasElementMatch = element === eventElement || element.contains(eventElement);
-      const hasExecutionKeyMatch = eventExecutionKey === executionKey;
-      const hasModifierKeysMatch = eventModifierKeys.every((key) => {
-        return modifierKeys.includes(MODIFIER_KEYS[key]);
-      });
+      const hasExecutionKeyMatch = eventExecutionKey.toLowerCase() === executionKey.toLowerCase();
+      const hasModifierKeysMatch = eventModifierKeys.removeObject(TO_MODIFIER[eventExecutionKey])
+        .every((key) => {
+          return modifierKeys.toArray().map(k => k.capitalize()).includes(TO_KEY[key]);
+        });
       const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 
       return hasElementMatch &&

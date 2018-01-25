@@ -1,0 +1,76 @@
+<div>
+  <label for='execution-key'>Execution Key</label>
+  {{input
+    value=executionKey
+    id='execution-key'
+  }}
+</div>
+
+<div>
+  <label for='modifier-keys'>Modifier Keys</label>
+  {{input
+    value=modifierKeys
+    name='modifier-keys'
+  }}
+</div>
+
+<div>
+  <label for='priority'>Priority</label>
+  {{input
+    value=priority
+    type='number'
+    name='priority'
+  }}
+</div>
+
+<div>
+  <label for='key-event'>Key Event</label>
+  <div
+    {{action (mut keyEvent) 'keydown'}}
+  >
+    Key Down {{if isKeydown ' - selected'}}
+  </div>
+
+  <div
+    {{action (mut keyEvent) 'keyup'}}
+  >
+    Key Up {{if isKeydown '' ' - selected'}}
+  </div>
+</div>
+
+<div>
+  <label for='group-name'>Group Name</label>
+  {{input
+    value=groupName
+    name='group-name'
+  }}
+</div>
+
+<div>
+  <button
+    {{action 'addMacro' (hash
+        executionKey=executionKey
+        modifierKeys=modifierKeys
+        priority=priority
+        keyEvent=keyEvent
+        groupName=groupName
+      )
+    }}
+    disabled={{hasNoExecutionKey}}
+  >
+    Add Macro
+  </button>
+</div>
+
+<div>
+  <button
+    {{action 'removeMacro' macro}}
+    disabled={{hasNoMacro}}
+  >
+    Remove Macro
+  </button>
+</div>
+
+<div>
+  {{callbackMessage}}
+</div>
