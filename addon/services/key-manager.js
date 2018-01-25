@@ -2,6 +2,7 @@ import Service from '@ember/service';
 import { getOwner } from '@ember/application';
 import { assign } from '@ember/polyfills';
 import Macro from '../utils/macro';
+import MODIFIER_KEYS from '../utils/modifier-keys';
 import {
   get,
   getProperties,
@@ -156,7 +157,7 @@ export default Service.extend({
       const hasElementMatch = element === eventElement || element.contains(eventElement);
       const hasExecutionKeyMatch = eventExecutionKey === executionKey;
       const hasModifierKeysMatch = eventModifierKeys.every((key) => {
-        return modifierKeys.includes(key);
+        return modifierKeys.includes(MODIFIER_KEYS[key]);
       });
       const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 

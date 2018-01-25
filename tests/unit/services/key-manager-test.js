@@ -34,7 +34,7 @@ const firstMacroAttrs = {
     firstMacroCallCount += 1;
   },
   element: div,
-  modifierKeys: ['shiftKey'],
+  modifierKeys: ['Shift'],
   keyEvent: 'keydown',
   groupName: 'group 1',
 };
@@ -44,7 +44,7 @@ const secondMacroAttrs = {
     secondMacroCallCount += 1;
   },
   executionKey: 'a',
-  modifierKeys: ['ctrlKey', 'altKey'],
+  modifierKeys: ['Control', 'Alt'],
   priority: 100,
   keyEvent: 'keydown',
   groupName: 'group 1',
@@ -62,7 +62,7 @@ const thirdMacroAttrs = {
   },
   element: div,
   executionKey: 'b',
-  modifierKeys: ['ctrlKey', 'altKey'],
+  modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keydown',
 };
 
@@ -76,7 +76,7 @@ const fourthMacroAttrs = {
     fourthMacroCallCount += 1;
   },
   executionKey: 'a',
-  modifierKeys: ['ctrlKey', 'altKey'],
+  modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keyup',
 };
 
@@ -90,7 +90,7 @@ const fifthMacroAttrs = {
     fifthMacroCallCount += 1;
   },
   executionKey: 'a',
-  modifierKeys: ['ctrlKey', 'altKey'],
+  modifierKeys: ['Control', 'Alt'],
   priority: 1,
   keyEvent: 'keydown',
 };
@@ -194,7 +194,7 @@ test('`addMacro()`', async function(assert) {
   );
   assert.deepEqual(
     get(firstMacro, 'modifierKeys'),
-    ['shiftKey'],
+    ['Shift'],
     'firstMacro modifier keys should be set'
   );
   assert.equal(
@@ -211,7 +211,7 @@ test('`addMacro()`', async function(assert) {
   );
   assert.deepEqual(
     get(secondMacro, 'modifierKeys'),
-    ['ctrlKey', 'altKey'],
+    ['Control', 'Alt'],
     'secondMacro modifier keys should be set'
   );
   assert.equal(
@@ -228,7 +228,7 @@ test('`addMacro()`', async function(assert) {
   );
   assert.deepEqual(
     get(thirdMacro, 'modifierKeys'),
-    ['ctrlKey', 'altKey'],
+    ['Control', 'Alt'],
     'thirdMacro modifier keys should be set'
   );
   assert.equal(
