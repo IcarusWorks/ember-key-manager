@@ -50,9 +50,9 @@ A 'macro' is made of a combination of: zero or more `modifierKeys`, one `executi
 | ---------- | ------------- | -------- | -------- | --------- |
 | `callback` | `Function` | Yes | `null` | A function to be called when the macro keys are matched, the `keyEvent` event is fired, and the scope defined by `element` is correct. When called, the `callback` is called with the keyboard `event` that triggered the macro. |
 | `element` | `Element` | No | `document.body` | A DOM element by which to scope the macro. Events triggered on _or_ within this element will fire the macro's callback. |
-| `executionKey` | `String` | Yes | `''` | A string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out. |
+| `executionKey` | `String` | Yes | `''` | A case-insensitive string that's the value of the key that triggers the macro's callback e.g., to make letter A the execution key, set `executionKey` to `a`. If unsure of a key's value, [use this tool](https://codepen.io/patrickberkeley/full/PEexPY) to it test out. This can be a modifier key. |
 | `isDisabledOnInput` | `Boolean` | No | `false` | A boolean to determine if a macro's the callback should be fired when a `contentEditable`, `input`, `textarea`, or `select` element is focused. |
-| `modifierKeys` | `Array` | No | `[]` | An array of modifier key names. Options are `Alt`, `Control`, `Meta`, `Shift`. |
+| `modifierKeys` | `Array` | No | `[]` | An array of modifier key names of case-insensitive strings. Options are `Alt`, `Control`, `Meta`, `Shift`. A warning will be logged if trying to use modifierKeys on a keyup event since this keyEvent will never match. |
 | `priority` | `Number` | No | `0` | An integer used to prioritize macros if there's more than one macro with the same `keys` listening at the same time. For example, you add a macro with the `escape` key on a route and the route's template renders a component that also binds a macro with the `escape` key. Highest priority takes precedence. |
 | `keyEvent` | `String` | Yes | `null` | Dictates which key event is used for the macro. Options are: `keydown`, `keyup`.
 | `groupName` | `String` | No | `null` | Used with disabling and enabling a group of macros.

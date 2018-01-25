@@ -8,18 +8,29 @@ import { moduleFor, test } from 'ember-qunit';
 import {
   focus,
 } from 'ember-native-dom-helpers';
-import wait from 'ember-test-helpers/wait';
 import { Promise } from 'rsvp';
+import {
+  triggerKeyEvent,
+} from '@ember/test-helpers';
+import {
+  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING,
+} from 'ember-key-manager/utils/warning-messages';
+import { registerWarnHandler } from '@ember/debug';
 
 const configOptions = {
   isDisabledOnInput: false,
 };
 let config;
+let warnings;
 
-async function dispatchEvent(element, event) {
-  await element.dispatchEvent(event);
-  await wait();
-  return event;
+registerWarnHandler((message, options, next) => {
+  warnings.push(message);
+  next(message, options);
+});
+
+async function dispatchEvent(element, eventDetails) {
+  await triggerKeyEvent(element, eventDetails.type, eventDetails.key, eventDetails.modifiers)
+  return eventDetails;
 }
 
 let firstMacroCallCount = 0;
@@ -34,7 +45,7 @@ const firstMacroAttrs = {
     firstMacroCallCount += 1;
   },
   element: div,
-  modifierKeys: ['Shift'],
+  executionKey: 'shift',
   keyEvent: 'keydown',
   groupName: 'group 1',
 };
@@ -44,7 +55,7 @@ const secondMacroAttrs = {
     secondMacroCallCount += 1;
   },
   executionKey: 'a',
-  modifierKeys: ['Control', 'Alt'],
+  modifierKeys: ['control', 'Alt'],
   priority: 100,
   keyEvent: 'keydown',
   groupName: 'group 1',
@@ -95,36 +106,50 @@ const fifthMacroAttrs = {
   keyEvent: 'keydown',
 };
 
-const firstMacroEvent = new KeyboardEvent('keydown', {
-  shiftKey: true,
-});
+const firstMacroEvent = {
+  type: 'keydown',
+  key: 'shift',
+};
 
-const secondMacroEvent = new KeyboardEvent('keydown', {
-  altKey: true,
-  ctrlKey: true,
+const secondMacroEvent = {
+  type: 'keydown',
+  modifiers: {
+    altKey: true,
+    ctrlKey: true,
+  },
   key: 'a',
-});
+};
 
-const thirdMacroEvent = new KeyboardEvent('keydown', {
-  altKey: true,
-  ctrlKey: true,
+const thirdMacroEvent = {
+  type: 'keydown',
+  modifiers: {
+    altKey: true,
+    ctrlKey: true,
+  },
   key: 'b',
-});
+};
 
-const fourthMacroEvent = new KeyboardEvent('keyup', {
-  altKey: true,
-  ctrlKey: true,
+const fourthMacroEvent = {
+  type: 'keyup',
+  modifiers: {
+    altKey: true,
+    ctrlKey: true,
+  },
   key: 'a',
-});
+};
 
-const fifthMacroEvent = new KeyboardEvent('keydown', {
-  altKey: true,
-  ctrlKey: true,
+const fifthMacroEvent = {
+  type: 'keydown',
+  modifiers: {
+    altKey: true,
+    ctrlKey: true,
+  },
   key: 'a',
-});
+};
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
   beforeEach() {
+    warnings = [];
     document.body.appendChild(div);
     getOwner(this).register('main:key-manager-config', configOptions, {
       instantiate: false,
@@ -188,13 +213,14 @@ test('`addMacro()`', async function(assert) {
   assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called');
 
   const firstMacro = get(service, 'keydownMacros').objectAt(0);
-  assert.notOk(
+  assert.equal(
     get(firstMacro, 'executionKey'),
-    'firstMacro execution key should not be set'
+    'shift',
+    'firstMacro execution key should be set'
   );
   assert.deepEqual(
     get(firstMacro, 'modifierKeys'),
-    ['Shift'],
+    [],
     'firstMacro modifier keys should be set'
   );
   assert.equal(
@@ -211,7 +237,7 @@ test('`addMacro()`', async function(assert) {
   );
   assert.deepEqual(
     get(secondMacro, 'modifierKeys'),
-    ['Control', 'Alt'],
+    ['control', 'Alt'],
     'secondMacro modifier keys should be set'
   );
   assert.equal(
@@ -395,8 +421,6 @@ test('`isDisabledOnInput` option disables callback on contentEditable elements',
 });
 
 test('`isDisabledOnInput` option disables callback on input elements', async function(assert) {
-  assert.expect(6);
-
   const service = this.subject();
 
   const promises = ['input', 'textarea', 'select'].map((elementName) => {
@@ -410,7 +434,6 @@ test('`isDisabledOnInput` option disables callback on input elements', async fun
       focus(element);
       await dispatchEvent(element, firstMacroEvent);
 
-      assert.equal(firstMacroCallCount, 1, 'callback is called');
 
       service.removeMacro(macro);
       macroAttrs = assign(macroAttrs, { isDisabledOnInput: true });
@@ -419,13 +442,14 @@ test('`isDisabledOnInput` option disables callback on input elements', async fun
       focus(element);
       await dispatchEvent(element, firstMacroEvent);
 
-      assert.equal(firstMacroCallCount, 1, 'callback is not called');
       element.remove();
       resolve();
     });
   });
 
   await Promise.all(promises);
+
+  assert.equal(firstMacroCallCount, 3, 'callback is called the correct number');
 });
 
 test('`isDisabledOnInput` config option disables callback on contentEditable elements', async function(assert) {
@@ -567,4 +591,17 @@ test('enabling a macro or group', async function(assert) {
 
   assert.equal(firstMacroCallCount, 2, 'firstMacro is still not disabled');
   assert.equal(secondMacroCallCount, 1, 'secondMacro is not disabled');
+});
+
+test('warning is triggered if registering a macro with modifiers and keyup', async function(assert) {
+  const service = this.subject();
+  service.addMacro({
+    callback: function() {},
+    executionKey: 'a',
+    modifierKeys: ['Control', 'Alt'],
+    keyEvent: 'keyup',
+  });
+
+  assert.ok(warnings, 'warning is present');
+  assert.equal(warnings[0], MODIFIERS_ON_KEYUP_WARNING, 'correct warning was sent');
 });
