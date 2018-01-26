@@ -117,7 +117,7 @@ export default Component.extend({
       priority: 10,
       keyEvent: 'keydown',
     });
-    set(this, 'closeModalMacro', 'closeModalMacro');
+    set(this, 'closeModalMacro', closeModalMacro);
   },
 
   willDestroyElement() {
