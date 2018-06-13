@@ -1,5 +1,6 @@
+import $ from 'jquery';
 import { getOwner } from '@ember/application';
-import {
+import EmberObject, {
   set,
   get,
 } from '@ember/object';
@@ -604,4 +605,74 @@ test('warning is triggered if registering a macro with modifiers and keyup', asy
 
   assert.ok(warnings, 'warning is present');
   assert.equal(warnings[0], MODIFIERS_ON_KEYUP_WARNING, 'correct warning was sent');
+});
+
+test('event propagation', async function(assert) {
+	assert.expect(8);
+
+	const macroAttrs = {
+		callback: function() {
+			firstMacroCallCount += 1;
+		},
+		executionKey: 'Control',
+		keyEvent: 'keydown',
+        priority: 1
+	};
+
+	const service = this.subject();
+
+	service.addMacro(macroAttrs);
+
+	assert.equal(get(service, 'keydownMacros').length, 1, 'expected number of keydown macros');
+
+	let macroEvent = {
+		type: 'keydown',
+		key: 'Control'
+	};
+	await dispatchEvent(document.body, macroEvent);
+
+	assert.equal(firstMacroCallCount, 1, 'expected macro callback');
+
+	// add a new container to test events propagation
+	const element = document.createElement('div');
+	element.setAttribute('class', 'grid');
+	document.body.appendChild(element);
+
+	// define a listener
+	const Grid = EmberObject.extend({
+        eventType: null,
+        eventKey: null,
+
+		init() {
+			const grid = $('.grid');
+			grid.on('keydown', (e) => {
+				this.handleEvent(e);
+			});
+		},
+
+		handleEvent(event) {
+			set(this, 'eventType', event.type);
+			set(this, 'eventKey', event.key);
+		}
+	});
+	const gridEventListener = Grid.create();
+
+	macroEvent = {
+		type: 'keydown',
+		key: 'arrowright',
+	};
+	await dispatchEvent(element, macroEvent);
+	assert.equal(firstMacroCallCount, 1, 'expected macro callback has not change');
+	assert.equal(gridEventListener.get('eventType'), 'keydown', 'expected keydown event type');
+	assert.equal(gridEventListener.get('eventKey'), 'arrowright', 'expected arrowright event key');
+
+	document.body.addEventListener('keydown', gridEventListener);
+	macroEvent = {
+		type: 'keydown',
+		key: 'arrowleft',
+	};
+	await dispatchEvent(document.body, macroEvent);
+	assert.equal(firstMacroCallCount, 1, 'expected macro callback still correct');
+	assert.equal(gridEventListener.get('eventType'), 'keydown', 'expected keydown event type');
+	assert.equal(gridEventListener.get('eventKey'), 'arrowleft', 'expected arrowleft event key');
 });

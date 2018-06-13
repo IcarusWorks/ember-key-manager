@@ -7,21 +7,21 @@ import {
   get,
   getProperties,
   set,
-  setProperties,
+  setProperties
 } from '@ember/object';
 import {
   filterBy,
 } from '@ember/object/computed';
 import { warn } from '@ember/debug';
-import { isPresent, } from '@ember/utils';
+import { isPresent } from '@ember/utils';
 import {
-  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING,
+  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING
 } from 'ember-key-manager/utils/warning-messages';
 
 const inputElements = [
   'INPUT',
   'SELECT',
-  'TEXTAREA',
+  'TEXTAREA'
 ];
 
 const isInputElement = (element) => {
@@ -115,7 +115,7 @@ export default Service.extend({
         ctrlKey: event.ctrlKey,
         metaKey: event.metaKey,
         shiftKey: event.shiftKey,
-      }
+      };
       const eventModifierKeys = Object.keys(allEventModifierKeys)
         .filter((key) => {
           return allEventModifierKeys[key] !== false;
@@ -127,7 +127,7 @@ export default Service.extend({
         event.type
       );
 
-      if (matchingMacros) {
+      if (isPresent(matchingMacros)) {
         const isTargetInput = isInputElement(event.target);
         event.stopPropagation();
 
