@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "ember-cli-babel": "^6.16.0",
-    "ember-copy": "^1.0.0",
+    "ember-copy": "^1.0.0"
   },
   "devDependencies": {
     "@ember/optional-features": "^0.6.3",
