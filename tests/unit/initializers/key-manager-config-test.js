@@ -2,7 +2,6 @@ import Application from '@ember/application';
 import { run } from '@ember/runloop';
 import { initialize } from 'dummy/initializers/key-manager-config';
 import { module, test } from 'qunit';
-import destroyApp from '../../helpers/destroy-app';
 
 module('Unit | Initializer | key manager config', {
   beforeEach() {
@@ -10,9 +9,6 @@ module('Unit | Initializer | key manager config', {
       this.application = Application.create();
       this.application.deferReadiness();
     });
-  },
-  afterEach() {
-    destroyApp(this.application);
   },
 });
 
