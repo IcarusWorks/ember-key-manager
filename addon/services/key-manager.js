@@ -40,6 +40,7 @@ export default Service.extend({
   keyupMacros: filterBy('macros', 'keyEvent', 'keyup'),
 
   init() {
+    this._super(...arguments);
     this.macros = A();
     this._registerConfigOptions();
   },

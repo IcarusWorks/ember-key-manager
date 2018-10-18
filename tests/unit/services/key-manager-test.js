@@ -108,7 +108,7 @@ const fifthMacroAttrs = {
 
 const firstMacroEvent = {
   type: 'keydown',
-  key: 'shift',
+  key: 'Shift',
 };
 
 const secondMacroEvent = {
@@ -117,7 +117,7 @@ const secondMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const thirdMacroEvent = {
@@ -126,7 +126,7 @@ const thirdMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'b',
+  key: 'B',
 };
 
 const fourthMacroEvent = {
@@ -135,7 +135,7 @@ const fourthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const fifthMacroEvent = {
@@ -144,7 +144,7 @@ const fifthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
