@@ -1,6 +1,5 @@
-import $ from 'jquery';
 import { getOwner } from '@ember/application';
-import EmberObject, {
+import {
   set,
   get,
 } from '@ember/object';
@@ -109,7 +108,7 @@ const fifthMacroAttrs = {
 
 const firstMacroEvent = {
   type: 'keydown',
-  key: 'shift',
+  key: 'Shift',
 };
 
 const secondMacroEvent = {
@@ -118,7 +117,7 @@ const secondMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const thirdMacroEvent = {
@@ -127,7 +126,7 @@ const thirdMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'b',
+  key: 'B',
 };
 
 const fourthMacroEvent = {
@@ -136,7 +135,7 @@ const fourthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const fifthMacroEvent = {
@@ -145,7 +144,7 @@ const fifthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 moduleFor('service:key-manager', 'Unit | Service | key manager', {
@@ -607,72 +606,29 @@ test('warning is triggered if registering a macro with modifiers and keyup', asy
   assert.equal(warnings[0], MODIFIERS_ON_KEYUP_WARNING, 'correct warning was sent');
 });
 
-test('event propagation', async function(assert) {
-	assert.expect(8);
+test('keyboard events that don\'t match still propogate', async function(assert) {
+  const service = this.subject();
+  let listenerCallCount = 0;
+  const nonMacroEvent = {
+    type: 'keydown',
+    modifiers: {
+      altKey: true,
+    },
+    key: 'B',
+  };
+  const div1 = document.createElement('DIV');
+  const container = document.body;
+  container.appendChild(div1);
+  container.addEventListener('keydown', function() {
+    listenerCallCount += 1;
+  });
 
-	const macroAttrs = {
-		callback: function() {
-			firstMacroCallCount += 1;
-		},
-		executionKey: 'Control',
-		keyEvent: 'keydown',
-        priority: 1
-	};
+  set(secondMacroAttrs, 'element', div1);
+  service.addMacro(secondMacroAttrs);
 
-	const service = this.subject();
+  await dispatchEvent(div1, secondMacroEvent);
+  await dispatchEvent(div1, nonMacroEvent);
 
-	service.addMacro(macroAttrs);
-
-	assert.equal(get(service, 'keydownMacros').length, 1, 'expected number of keydown macros');
-
-	let macroEvent = {
-		type: 'keydown',
-		key: 'Control'
-	};
-	await dispatchEvent(document.body, macroEvent);
-
-	assert.equal(firstMacroCallCount, 1, 'expected macro callback');
-
-	// add a new container to test events propagation
-	const element = document.createElement('div');
-	element.setAttribute('class', 'grid');
-	document.body.appendChild(element);
-
-	// define a listener
-	const Grid = EmberObject.extend({
-        eventType: null,
-        eventKey: null,
-
-		init() {
-			const grid = $('.grid');
-			grid.on('keydown', (e) => {
-				this.handleEvent(e);
-			});
-		},
-
-		handleEvent(event) {
-			set(this, 'eventType', event.type);
-			set(this, 'eventKey', event.key);
-		}
-	});
-	const gridEventListener = Grid.create();
-
-	macroEvent = {
-		type: 'keydown',
-		key: 'arrowright',
-	};
-	await dispatchEvent(element, macroEvent);
-	assert.equal(firstMacroCallCount, 1, 'expected macro callback has not change');
-	assert.equal(gridEventListener.get('eventType'), 'keydown', 'expected keydown event type');
-	assert.equal(gridEventListener.get('eventKey'), 'arrowright', 'expected arrowright event key');
-
-	document.body.addEventListener('keydown', gridEventListener);
-	macroEvent = {
-		type: 'keydown',
-		key: 'arrowleft',
-	};
-	await dispatchEvent(document.body, macroEvent);
-	assert.equal(firstMacroCallCount, 1, 'expected macro callback still correct');
-	assert.equal(gridEventListener.get('eventType'), 'keydown', 'expected keydown event type');
-	assert.equal(gridEventListener.get('eventKey'), 'arrowleft', 'expected arrowleft event key');
+  assert.equal(secondMacroCallCount, 1, 'macro is triggered once');
+  assert.equal(listenerCallCount, 1, 'non-macro event propogates');
 });
