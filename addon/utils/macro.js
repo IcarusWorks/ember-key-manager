@@ -2,7 +2,8 @@ import EmberObject, {
   setProperties,
 } from '@ember/object';
 import { assign } from '@ember/polyfills';
-import { copy } from '@ember/object/internals';
+import { copy } from 'ember-copy';
+import { A } from '@ember/array';
 
 const defaultAttrs = {
   callback: null,
@@ -20,7 +21,9 @@ export default EmberObject.extend({
   setup(customAttrs) {
     const defaultAttrsCopy = copy(defaultAttrs);
     const attrs = assign(defaultAttrsCopy, customAttrs);
-
+    if (attrs.modifierKeys !== undefined) {
+      attrs.modifierKeys = A(attrs.modifierKeys);
+    }
     setProperties(this, attrs);
   },
 });
