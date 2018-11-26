@@ -605,3 +605,30 @@ test('warning is triggered if registering a macro with modifiers and keyup', asy
   assert.ok(warnings, 'warning is present');
   assert.equal(warnings[0], MODIFIERS_ON_KEYUP_WARNING, 'correct warning was sent');
 });
+
+test('keyboard events that don\'t match still propogate', async function(assert) {
+  const service = this.subject();
+  let listenerCallCount = 0;
+  const nonMacroEvent = {
+    type: 'keydown',
+    modifiers: {
+      altKey: true,
+    },
+    key: 'B',
+  };
+  const div1 = document.createElement('DIV');
+  const container = document.body;
+  container.appendChild(div1);
+  container.addEventListener('keydown', function() {
+    listenerCallCount += 1;
+  });
+
+  set(secondMacroAttrs, 'element', div1);
+  service.addMacro(secondMacroAttrs);
+
+  await dispatchEvent(div1, secondMacroEvent);
+  await dispatchEvent(div1, nonMacroEvent);
+
+  assert.equal(secondMacroCallCount, 1, 'macro is triggered once');
+  assert.equal(listenerCallCount, 1, 'non-macro event propogates');
+});
