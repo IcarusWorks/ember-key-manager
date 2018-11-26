@@ -7,7 +7,7 @@ import {
   get,
   getProperties,
   set,
-  setProperties
+  setProperties,
 } from '@ember/object';
 import {
   filterBy,
@@ -15,13 +15,15 @@ import {
 import { warn } from '@ember/debug';
 import { isPresent } from '@ember/utils';
 import {
-  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING
+  MODIFIERS_ON_KEYUP as MODIFIERS_ON_KEYUP_WARNING,
 } from 'ember-key-manager/utils/warning-messages';
+import { A } from '@ember/array';
+import { capitalize } from '@ember/string';
 
 const inputElements = [
   'INPUT',
   'SELECT',
-  'TEXTAREA'
+  'TEXTAREA',
 ];
 
 const isInputElement = (element) => {
@@ -38,7 +40,8 @@ export default Service.extend({
   keyupMacros: filterBy('macros', 'keyEvent', 'keyup'),
 
   init() {
-    this.macros = [];
+    this._super(...arguments);
+    this.macros = A();
     this._registerConfigOptions();
   },
 
@@ -115,11 +118,11 @@ export default Service.extend({
         ctrlKey: event.ctrlKey,
         metaKey: event.metaKey,
         shiftKey: event.shiftKey,
-      };
-      const eventModifierKeys = Object.keys(allEventModifierKeys)
+      }
+      const eventModifierKeys = A(Object.keys(allEventModifierKeys)
         .filter((key) => {
           return allEventModifierKeys[key] !== false;
-        });
+        }));
       const matchingMacros = this._findMatchingMacros(
         event.target,
         event.key,
@@ -161,7 +164,7 @@ export default Service.extend({
       const hasExecutionKeyMatch = eventExecutionKey.toLowerCase() === executionKey.toLowerCase();
       const hasModifierKeysMatch = eventModifierKeys.removeObject(TO_MODIFIER[eventExecutionKey])
         .every((key) => {
-          return modifierKeys.toArray().map(k => k.capitalize()).includes(TO_KEY[key]);
+          return modifierKeys.toArray().map(k => capitalize(k)).includes(TO_KEY[key]);
         });
       const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 
@@ -171,7 +174,7 @@ export default Service.extend({
         hasModifierKeyCount;
     });
 
-    const highestPriority = matchingMacros.mapBy('priority')
+    const highestPriority = A(matchingMacros).mapBy('priority')
       .reduce((max, priority) => Math.max(max, priority), -Infinity);
 
     return matchingMacros.filter((macro) => get(macro, 'priority') === highestPriority);
