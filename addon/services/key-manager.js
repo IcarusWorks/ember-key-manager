@@ -125,7 +125,7 @@ export default Service.extend({
         }));
       const matchingMacros = this._findMatchingMacros(
         event.target,
-        event.key,
+        event.key || '',
         eventModifierKeys,
         event.type
       );
