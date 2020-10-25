@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = {
-  name: 'ember-key-manager',
+  name: require('./package').name,
 
   normalizeEntityName: function() {},
 
   isDevelopingAddon: function() {
     return false;
-  },
+  }
 };
