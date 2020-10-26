@@ -44,7 +44,7 @@ const firstMacroAttrs = {
     firstMacroCallCount += 1;
   },
   element: div,
-  executionKey: 'shift',
+  executionKey: 'Shift',
   keyEvent: 'keydown',
   groupName: 'group 1',
 };
@@ -53,8 +53,8 @@ const secondMacroAttrs = {
   callback: function() {
     secondMacroCallCount += 1;
   },
-  executionKey: 'a',
-  modifierKeys: ['control', 'Alt'],
+  executionKey: 'A',
+  modifierKeys: ['Control', 'Alt'],
   priority: 100,
   keyEvent: 'keydown',
   groupName: 'group 1',
@@ -71,7 +71,7 @@ const thirdMacroAttrs = {
     thirdMacroCallCount += 1;
   },
   element: div,
-  executionKey: 'b',
+  executionKey: 'B',
   modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keydown',
 };
@@ -85,7 +85,7 @@ const fourthMacroAttrs = {
   callback: function() {
     fourthMacroCallCount += 1;
   },
-  executionKey: 'a',
+  executionKey: 'A',
   modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keyup',
 };
@@ -99,7 +99,7 @@ const fifthMacroAttrs = {
   callback: function() {
     fifthMacroCallCount += 1;
   },
-  executionKey: 'a',
+  executionKey: 'A',
   modifierKeys: ['Control', 'Alt'],
   priority: 1,
   keyEvent: 'keydown',

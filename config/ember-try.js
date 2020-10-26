@@ -1,5 +1,4 @@
 'use strict';
-
 const getChannelURL = require('ember-source-channel-url');
 
 module.exports = async function() {

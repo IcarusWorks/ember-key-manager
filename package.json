@@ -1,6 +1,6 @@
 {
   "name": "ember-key-manager",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "A service for (un)binding key up and down events.",
   "keywords": [
     "ember-addon",
@@ -26,7 +26,8 @@
     "test": "tests"
   },
   "contributors": [
-    "Jordan Morano <jordan@icarus.works>"
+    "Jordan Morano <jordan@icarus.works>",
+    "Bryan Crotaz <bgcrotaz@hotmail.com>"
   ],
   "scripts": {
     "build": "ember build --environment=production",

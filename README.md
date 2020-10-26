@@ -1,4 +1,5 @@
-# ember-key-manager
+ember-key-manager
+==============================================================================
 
 [![NPM release][npm-badge]][npm-badge-url]
 [![Build][travis-badge]][travis-badge-url]
@@ -14,6 +15,8 @@
 Compatibility
 ------------------------------------------------------------------------------
 
+Ember Octane ready
+
 * Ember.js v3.16 or above
 * Ember CLI v2.13 or above
 * Node.js v10 or above
@@ -23,7 +26,6 @@ Installation
 
 A service for (un)binding keyboard `keyup` and `keydown` events.
 
-## Installation
 
 * `ember install ember-key-manager`
 
@@ -183,3 +185,33 @@ export default Route.extend({
   },
 });
 ```
+
+
+## Developing
+
+### Running
+
+
+### Running Tests
+
+* `npm test` (Runs `ember try:each` to test your addon against multiple Ember versions)
+* `ember test`
+* `ember test --server`
+
+Installation
+------------------------------------------------------------------------------
+
+```
+ember install ember-key-manager
+```
+
+Contributing
+------------------------------------------------------------------------------
+
+See the [Contributing](CONTRIBUTING.md) guide for details.
+
+
+License
+------------------------------------------------------------------------------
+
+This project is licensed under the [MIT License](LICENSE.md).
