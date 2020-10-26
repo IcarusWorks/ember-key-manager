@@ -1,7 +1,6 @@
 import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 import {
-  get,
   set,
   setProperties,
 } from '@ember/object';
@@ -46,7 +45,7 @@ export default Controller.extend({
       const macro = this.keyManager.addMacro({
         callback: bind(this, function() {
           count++;
-          set(this, 'callbackMessage', `Callback is invoked ${count} times.`);
+          this.callbackMessage = `Callback is invoked ${count} times.`;
         }),
         executionKey,
         priority,
