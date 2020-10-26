@@ -1,6 +1,7 @@
 import Modifier from 'ember-modifier';
 import {inject as service} from '@ember/service';
 import {assert} from '@ember/debug';
+import { KeyEvent } from '@ember/test-helpers/dom/trigger-key-event';
 
 export type IKeyMacro = {} | null;
 
@@ -16,7 +17,7 @@ export default abstract class KeyMacroModifier extends Modifier {
   @service keyManager!: IKeyManager;
 
   private macro: any;
-  protected abstract keyEvent: string;
+  protected abstract keyEvent: KeyEvent;
 
   private addMacro() {
     this.macro = this.keyManager.addMacro({
