@@ -1,51 +1,52 @@
 <div>
   <label for="execution-key">Execution Key</label>
-  {{input
-    value=executionKey
+  <input
+    value={{this.executionKey}}
     id="execution-key"
-  }}
+  />
 </div>
 
 <div>
   <label for="modifier-keys">Modifier Keys</label>
-  {{input
-    value=modifierKeys
+  <input
+    value={{this.modifierKeys}}
     name="modifier-keys"
-  }}
+  />
 </div>
 
 <div>
   <label for="priority">Priority</label>
-  {{input
-    value=priority
+  <input
+    value={{this.priority}}
     type="number"
     name="priority"
-  }}
+  />
 </div>
 
 <div>
   <label for="key-event">Key Event</label>
-  <button {{action (mut keyEvent) "keydown"}}>
-    Key Down {{if isKeydown " - selected"}}
+  <button type="button" {{on "click" (fn (mut this.keyEvent) "keydown")}}>
+    Key Down {{if this.isKeydown " - selected"}}
   </button>
 
-  <button {{action (mut keyEvent) "keyup"}}>
-    Key Up {{if isKeydown "" " - selected"}}
+  <button type="button" {{on "click" (fn (mut this.keyEvent) "keyup")}}>
+    Key Up {{if this.isKeydown "" " - selected"}}
   </button>
 </div>
 
 <div>
   <label for="group-name">Group Name</label>
-  {{input
-    value=groupName
+  <input
+    value={{this.groupName}}
     name="group-name"
-  }}
+  />
 </div>
 
 <div>
   <button
-    disabled={{hasNoExecutionKey}}
-    {{action "addMacro" (hash executionKey=executionKey modifierKeys=modifierKeys priority=priority keyEvent=keyEvent groupName=groupName)}}
+    type="button" 
+    disabled={{this.hasNoExecutionKey}}
+    {{on "click"  (fn this.addMacro (hash executionKey=this.executionKey modifierKeys=this.modifierKeys priority=this.priority keyEvent=this.keyEvent groupName=this.groupName))}}
   >
     Add Macro
   </button>
@@ -53,13 +54,14 @@
 
 <div>
   <button
-    disabled={{hasNoMacro}}
-    {{action "removeMacro" macro}}
+    type="button" 
+    disabled={{this.hasNoMacro}}
+    {{on "click" (fn "removeMacro" this.macro)}}
   >
     Remove Macro
   </button>
 </div>
 
 <div>
-  {{callbackMessage}}
+  {{this.callbackMessage}}
 </div>
