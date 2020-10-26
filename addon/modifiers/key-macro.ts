@@ -3,6 +3,7 @@ import {inject as service} from '@ember/service';
 import {assert} from '@ember/debug';
 import { KeyEvent } from '@ember/test-helpers/dom/trigger-key-event';
 import KeyManagerService from 'dummy/services/key-manager';
+import { KeyMacroModifierCallback } from 'ember-key-manager/utils/callback';
 
 export type IKeyMacro = {} | null;
 
@@ -13,7 +14,7 @@ type ModifierKey = 'Alt' | 'Control' | 'Shift' | 'Meta';
 
 interface KeyMacroModifierArgs extends ModifierArgs {
   named: {
-    callback: Function;
+    callback: KeyMacroModifierCallback;
     executionKey: string;
     modifierKeys?: ModifierKey[];
     priority?: number;
@@ -44,7 +45,7 @@ export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifier
     }
   }
 
-  get callback(): Function {
+  get callback(): KeyMacroModifierCallback {
     return this.args.named.callback;
   }
 

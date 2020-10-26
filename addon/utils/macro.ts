@@ -1,8 +1,9 @@
 import { A } from '@ember/array';
 import { KeyEvent } from '@ember/test-helpers/dom/trigger-key-event';
+import { KeyMacroModifierCallback } from './callback';
 
 export interface MacroOptions {
-  callback: Function;
+  callback: KeyMacroModifierCallback;
   executionKey: string;
   modifierKeys?: string[],
   keyEvent?: KeyEvent;
@@ -15,7 +16,7 @@ export interface MacroOptions {
 
 export default class Macro {
   keyEvent: KeyEvent = 'keydown';
-  callback: Function = () => {};
+  callback: KeyMacroModifierCallback = () => {};
   element: HTMLElement = document.body;
   executionKey: string = '';
   isDisabledOnInput: boolean = false;

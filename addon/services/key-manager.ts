@@ -1,10 +1,6 @@
 import Service, {inject as service} from '@ember/service';
-import { getOwner } from '@ember/application';
 import Macro, { MacroOptions } from '../utils/macro';
 import { TO_MODIFIER, TO_KEY } from '../utils/modifier-keys';
-import {
-  setProperties,
-} from '@ember/object';
 import { warn } from '@ember/debug';
 import { isPresent } from '@ember/utils';
 import {
