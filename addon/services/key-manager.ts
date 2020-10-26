@@ -1,4 +1,4 @@
-import Service from '@ember/service';
+import Service, {inject as service} from '@ember/service';
 import { getOwner } from '@ember/application';
 import Macro, { MacroOptions } from '../utils/macro';
 import { TO_MODIFIER, TO_KEY } from '../utils/modifier-keys';
@@ -12,6 +12,7 @@ import {
 } from 'ember-key-manager/utils/warning-messages';
 import { A } from '@ember/array';
 import { capitalize } from '@ember/string';
+import KeyManagerConfig from 'ember-key-manager/utils/config';
 
 const inputElements = [
   'INPUT',
@@ -27,6 +28,8 @@ const isInputElement = (element: HTMLElement) => {
 };
 
 export default class KeyManagerService extends Service {
+  @service config!: KeyManagerConfig;
+
   isDisabledOnInput = false; // Config option
   macros = A();
 
@@ -179,10 +182,8 @@ export default class KeyManagerService extends Service {
   }
 
   _registerConfigOptions() {
-    const config = getOwner(this).lookup('main:key-manager-config');
-
-    if (config) {
-      setProperties(this, config);
+    if (this.config.isDisabledOnInput !== undefined) {
+      this.isDisabledOnInput = this.config.isDisabledOnInput;
     }
   }
 
