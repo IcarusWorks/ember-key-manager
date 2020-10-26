@@ -12,11 +12,11 @@ export interface IKeyManager {
 const isMac: boolean = window.navigator.platform === "MacIntel";
 export const cmdKey: string = isMac ? 'Meta' : 'Control';
 
-export default class KeyMacroModifier extends Modifier {
+export default abstract class KeyMacroModifier extends Modifier {
   @service keyManager!: IKeyManager;
 
   private macro: any;
-  protected keyEvent!: string;
+  protected abstract keyEvent: string;
 
   private addMacro() {
     this.macro = this.keyManager.addMacro({
