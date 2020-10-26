@@ -13,9 +13,8 @@ export const cmdKey: string = isMac ? 'Meta' : 'Control';
 type ModifierKey = 'Alt' | 'Control' | 'Shift' | 'Meta';
 
 interface KeyMacroModifierArgs extends ModifierArgs {
+  positional: [executionKey: string, callback: KeyMacroModifierCallback];
   named: {
-    callback: KeyMacroModifierCallback;
-    executionKey: string;
     modifierKeys?: ModifierKey[];
     priority?: number;
     disabledOnInput?: boolean;
@@ -27,6 +26,7 @@ export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifier
 
   private macro: any;
   protected abstract keyEvent: KeyEvent;
+  protected abstract name: string;
 
   private addMacro() {
     this.macro = this.keyManager.addMacro({
@@ -46,12 +46,13 @@ export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifier
   }
 
   get callback(): KeyMacroModifierCallback {
-    return this.args.named.callback;
+    assert(`A callback function must be supplied as the second parameter of a ${this.name} modifier`, this.args.positional.length > 1);
+    return this.args.positional[1] as KeyMacroModifierCallback;
   }
 
   get executionKey(): string {
-    assert("executionKey must be supplied in key-macro modifier", this.args.named.executionKey);
-    return this.args.named.executionKey;
+    assert(`executionKey must be supplied as the first parameter of a ${this.name} modifier`, this.args.positional.length > 0);
+    return this.args.positional[0] as string;
   }
 
   get modifierKeys(): string[] {
