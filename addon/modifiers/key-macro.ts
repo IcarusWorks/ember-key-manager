@@ -30,6 +30,7 @@ export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifier
 
   private addMacro() {
     this.macro = this.keyManager.addMacro({
+      element: this.element as HTMLElement,
       callback: this.callback,
       executionKey: this.executionKey,
       modifierKeys: this.modifierKeys,
