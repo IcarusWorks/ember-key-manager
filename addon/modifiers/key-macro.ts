@@ -1,20 +1,28 @@
-import Modifier from 'ember-modifier';
+import Modifier, { ModifierArgs } from 'ember-modifier';
 import {inject as service} from '@ember/service';
 import {assert} from '@ember/debug';
 import { KeyEvent } from '@ember/test-helpers/dom/trigger-key-event';
+import KeyManagerService from 'dummy/services/key-manager';
 
 export type IKeyMacro = {} | null;
-
-export interface IKeyManager {
-  addMacro(args: any): IKeyMacro;
-  removeMacro(macro: any): void;
-}
 
 const isMac: boolean = window.navigator.platform === "MacIntel";
 export const cmdKey: string = isMac ? 'Meta' : 'Control';
 
-export default abstract class KeyMacroModifier extends Modifier {
-  @service keyManager!: IKeyManager;
+type ModifierKey = 'Alt' | 'Control' | 'Shift' | 'Meta';
+
+interface KeyMacroModifierArgs extends ModifierArgs {
+  named: {
+    callback: Function;
+    executionKey: string;
+    modifierKeys?: ModifierKey[];
+    priority?: number;
+    disabledOnInput?: boolean;
+  }
+}
+
+export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifierArgs> {
+  @service keyManager!: KeyManagerService;
 
   private macro: any;
   protected abstract keyEvent: KeyEvent;
@@ -36,25 +44,25 @@ export default abstract class KeyMacroModifier extends Modifier {
     }
   }
 
-  get callback() {
+  get callback(): Function {
     return this.args.named.callback;
   }
 
-  get executionKey() {
+  get executionKey(): string {
     assert("executionKey must be supplied in key-macro modifier", this.args.named.executionKey);
     return this.args.named.executionKey;
   }
 
-  get modifierKeys() {
+  get modifierKeys(): string[] {
     return this.args.named.modifierKeys || [];
   }
 
-  get priority() {
+  get priority(): number {
     return this.args.named.priority || 0;
   }
 
-  get isDisabledOnInput() {
-    return this.args.named.disabledOnInput;
+  get isDisabledOnInput(): boolean {
+    return this.args.named.disabledOnInput || false;
   }
 
   didReceiveArguments() {
