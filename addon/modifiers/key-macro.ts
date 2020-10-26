@@ -66,12 +66,12 @@ export default abstract class KeyMacroModifier extends Modifier<KeyMacroModifier
     return this.args.named.disabledOnInput || false;
   }
 
-  didReceiveArguments() {
+  public didReceiveArguments() {
     this.removeMacro();
     this.addMacro();
   }
 
-  willDestroy() {
+  public willDestroy() {
     this.removeMacro();
   }
 }

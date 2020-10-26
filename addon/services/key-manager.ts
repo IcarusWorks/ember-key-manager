@@ -29,11 +29,11 @@ export default class KeyManagerService extends Service {
   isDisabledOnInput = false; // Config option
   macros = A();
 
-  get keydownMacros() {
+  public get keydownMacros() {
     return this.macros.filterBy('keyEvent', 'keydown');
   }
 
-  get keyupMacros() {
+  public get keyupMacros() {
     return this.macros.filterBy('keyEvent', 'keyup');
   }
 
@@ -42,7 +42,7 @@ export default class KeyManagerService extends Service {
     this._registerConfigOptions();
   }
 
-  addMacro(options: MacroOptions) {
+  public addMacro(options: MacroOptions) {
     options = this._mergeConfigDefaults(options);
     const macro = new Macro(options);
 
@@ -57,33 +57,33 @@ export default class KeyManagerService extends Service {
     return macro;
   }
 
-  _handleModifiersOnKeyup({ modifierKeys }: Macro, keyEvent: string) {
+  public removeMacro(macro: Macro) {
+    this.macros.removeObject(macro);
+
+    this._removeEventListenter(macro.element, macro.keyEvent);
+  }
+
+  private _handleModifiersOnKeyup({ modifierKeys }: Macro, keyEvent: string) {
     if (keyEvent === 'keyup' && isPresent(modifierKeys)) {
       warn(MODIFIERS_ON_KEYUP_WARNING, false, {id: 'keyup-with-modifiers'});
     }
   }
 
-  _mergeConfigDefaults(options: MacroOptions) {
+  private _mergeConfigDefaults(options: MacroOptions) {
     if (options.isDisabledOnInput == undefined) {
       options.isDisabledOnInput = this.isDisabledOnInput;
     }
     return options;
   }
 
-  _addEventListener(element: HTMLElement, keyEvent: string) {
+  private _addEventListener(element: HTMLElement, keyEvent: string) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.addEventListener(keyEvent, this);
     }
   }
 
-  removeMacro(macro: Macro) {
-    this.macros.removeObject(macro);
-
-    this._removeEventListenter(macro.element, macro.keyEvent);
-  }
-
-  _removeEventListenter(element: HTMLElement, keyEvent: string) {
+  private _removeEventListenter(element: HTMLElement, keyEvent: string) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.removeEventListener(keyEvent, this);
@@ -98,7 +98,8 @@ export default class KeyManagerService extends Service {
     this._setDisabledState(recipient, false);
   }
 
-  handleEvent(event: KeyboardEvent) {
+  public handleEvent(event: KeyboardEvent) {
+    // called by element event listener
     if (this.isDestroyed || this.isDestroying) {
       return false;
     }
@@ -142,7 +143,7 @@ export default class KeyManagerService extends Service {
     return false;
   }
 
-  _findMacroWithElementAndKeyEvent(eventElement: HTMLElement, eventKeyEvent: string) {
+  private _findMacroWithElementAndKeyEvent(eventElement: HTMLElement, eventKeyEvent: string) {
     var events = eventKeyEvent === "keydown" ? this.keydownMacros : this.keyupMacros;
     return events.find((macro: Macro) => {
       const element = macro.element;
@@ -150,7 +151,7 @@ export default class KeyManagerService extends Service {
     });
   }
 
-  _findMatchingMacros(eventElement:HTMLElement, eventExecutionKey: string, eventModifierKeys: string[], eventKeyEvent: string) {
+  private _findMatchingMacros(eventElement:HTMLElement, eventExecutionKey: string, eventModifierKeys: string[], eventKeyEvent: string) {
     var events = eventKeyEvent === "keydown" ? this.keydownMacros : this.keyupMacros;
     const matchingMacros = events.filter((macro: Macro) => {
       const element = macro.element;
@@ -177,13 +178,13 @@ export default class KeyManagerService extends Service {
     return matchingMacros.filter((macro: Macro) => macro.priority === highestPriority);
   }
 
-  _registerConfigOptions() {
+  private _registerConfigOptions() {
     if (this.config.isDisabledOnInput !== undefined) {
       this.isDisabledOnInput = this.config.isDisabledOnInput;
     }
   }
 
-  _setDisabledState(recipient: any, isDisabled: boolean) {
+  private _setDisabledState(recipient: any, isDisabled: boolean) {
     if (typeof recipient === 'string') {
       this._setGroupDisabledState(recipient, isDisabled);
     } else {
@@ -191,7 +192,7 @@ export default class KeyManagerService extends Service {
     }
   }
 
-  _setGroupDisabledState(groupName: string, isDisabled: boolean) {
+  private _setGroupDisabledState(groupName: string, isDisabled: boolean) {
     this.macros.filterBy('groupName', groupName)
       .setEach('isDisabled', isDisabled);
   }
