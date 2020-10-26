@@ -1,7 +1,5 @@
-import { getOwner } from '@ember/application';
 import {
-  set,
-  get,
+  set
 } from '@ember/object';
 import { assign } from '@ember/polyfills';
 import { module, test } from 'qunit';
@@ -46,7 +44,7 @@ const firstMacroAttrs = {
     firstMacroCallCount += 1;
   },
   element: div,
-  executionKey: 'shift',
+  executionKey: 'Shift',
   keyEvent: 'keydown',
   groupName: 'group 1',
 };
@@ -55,8 +53,8 @@ const secondMacroAttrs = {
   callback: function() {
     secondMacroCallCount += 1;
   },
-  executionKey: 'a',
-  modifierKeys: ['control', 'Alt'],
+  executionKey: 'A',
+  modifierKeys: ['Control', 'Alt'],
   priority: 100,
   keyEvent: 'keydown',
   groupName: 'group 1',
@@ -73,7 +71,7 @@ const thirdMacroAttrs = {
     thirdMacroCallCount += 1;
   },
   element: div,
-  executionKey: 'b',
+  executionKey: 'B',
   modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keydown',
 };
@@ -87,7 +85,7 @@ const fourthMacroAttrs = {
   callback: function() {
     fourthMacroCallCount += 1;
   },
-  executionKey: 'a',
+  executionKey: 'A',
   modifierKeys: ['Control', 'Alt'],
   keyEvent: 'keyup',
 };
@@ -101,7 +99,7 @@ const fifthMacroAttrs = {
   callback: function() {
     fifthMacroCallCount += 1;
   },
-  executionKey: 'a',
+  executionKey: 'A',
   modifierKeys: ['Control', 'Alt'],
   priority: 1,
   keyEvent: 'keydown',
@@ -109,7 +107,7 @@ const fifthMacroAttrs = {
 
 const firstMacroEvent = {
   type: 'keydown',
-  key: 'shift',
+  key: 'Shift',
 };
 
 const secondMacroEvent = {
@@ -118,7 +116,7 @@ const secondMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const thirdMacroEvent = {
@@ -127,7 +125,7 @@ const thirdMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'b',
+  key: 'B',
 };
 
 const fourthMacroEvent = {
@@ -136,7 +134,7 @@ const fourthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 const fifthMacroEvent = {
@@ -145,7 +143,7 @@ const fifthMacroEvent = {
     altKey: true,
     ctrlKey: true,
   },
-  key: 'a',
+  key: 'A',
 };
 
 module('Unit | Service | key manager', function(hooks) {
@@ -174,14 +172,14 @@ module('Unit | Service | key manager', function(hooks) {
   test('`init()` sets `macros` to an empty array', function(assert) {
     const service = this.owner.lookup('service:key-manager');
 
-    assert.deepEqual(get(service, 'macros'), []);
+    assert.deepEqual(service.macros, []);
   });
 
   test('`init()` sets defaults from config', function(assert) {
     set(config, 'isDisabledOnInput', true);
 
     const service = this.owner.lookup('service:key-manager');
-    assert.ok(get(service, 'isDisabledOnInput'), 'isDisabledOnInput is true from config.');
+    assert.ok(service.isDisabledOnInput, 'isDisabledOnInput is true from config.');
   });
 
   test('`addMacro()`', async function(assert) {
@@ -196,7 +194,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.addMacro(fifthMacroAttrs);
 
     assert.equal(
-      get(service, 'keydownMacros').length,
+      service.keydownMacros.length,
       4,
       'keydown macros should be set'
     );
@@ -215,53 +213,53 @@ module('Unit | Service | key manager', function(hooks) {
     assert.equal(fourthMacroCallCount, 0, 'fourthMacro callback is not called');
     assert.equal(fifthMacroCallCount, 0, 'fifthMacro callback is not called');
 
-    const firstMacro = get(service, 'keydownMacros').objectAt(0);
+    const firstMacro = service.keydownMacros.objectAt(0);
     assert.equal(
-      get(firstMacro, 'executionKey'),
-      'shift',
+      firstMacro.executionKey,
+      'Shift',
       'firstMacro execution key should be set'
     );
     assert.deepEqual(
-      get(firstMacro, 'modifierKeys'),
+      firstMacro.modifierKeys,
       [],
       'firstMacro modifier keys should be set'
     );
     assert.equal(
-      get(firstMacro, 'element'),
+      firstMacro.element,
       div,
       'element should be set to passed in element'
     );
 
-    const secondMacro = get(service, 'keydownMacros').objectAt(1);
+    const secondMacro = service.keydownMacros.objectAt(1);
     assert.equal(
-      get(secondMacro, 'executionKey'),
-      'a',
+      secondMacro.executionKey,
+      'A',
       'secondMacro execution key should be set'
     );
     assert.deepEqual(
-      get(secondMacro, 'modifierKeys'),
-      ['control', 'Alt'],
+      secondMacro.modifierKeys,
+      ['Control', 'Alt'],
       'secondMacro modifier keys should be set'
     );
     assert.equal(
-      get(secondMacro, 'element'),
+      secondMacro.element,
       document.body,
       'element should be set to default'
     );
 
-    const thirdMacro = get(service, 'keydownMacros').objectAt(2);
+    const thirdMacro = service.keydownMacros.objectAt(2);
     assert.equal(
-      get(thirdMacro, 'executionKey'),
-      'b',
+      thirdMacro.executionKey,
+      'B',
       'thirdMacro execution key should be set'
     );
     assert.deepEqual(
-      get(thirdMacro, 'modifierKeys'),
+      thirdMacro.modifierKeys,
       ['Control', 'Alt'],
       'thirdMacro modifier keys should be set'
     );
     assert.equal(
-      get(thirdMacro, 'element'),
+      thirdMacro.element,
       div,
       'element should be set to default'
     );
@@ -279,12 +277,12 @@ module('Unit | Service | key manager', function(hooks) {
     const fifthMacro = service.addMacro(fifthMacroAttrs);
 
     assert.equal(
-      get(service, 'keydownMacros').length,
+      service.keydownMacros.length,
       4,
       'keydown macros should be set'
     );
     assert.equal(
-      get(service, 'keyupMacros').length,
+      service.keyupMacros.length,
       1,
       'keyup macros should be set'
     );
@@ -304,7 +302,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.removeMacro(firstMacro);
 
     assert.equal(
-      get(service, 'keydownMacros').length,
+      service.keydownMacros.length,
       3,
       'keydown macros should be set'
     );
@@ -324,7 +322,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.removeMacro(secondMacro);
 
     assert.equal(
-      get(service, 'keydownMacros').length,
+      service.keydownMacros.length,
       2,
       'keydown macros should be set'
     );
@@ -344,7 +342,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.removeMacro(thirdMacro);
 
     assert.equal(
-      get(service, 'keydownMacros').length,
+      service.keydownMacros.length,
       1,
       'keydown macros should not be set'
     );
@@ -364,7 +362,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.removeMacro(fourthMacro);
 
     assert.equal(
-      get(service, 'keyupMacros').length,
+      service.keyupMacros.length,
       0,
       'keyup macros should not be set'
     );
@@ -384,7 +382,7 @@ module('Unit | Service | key manager', function(hooks) {
     service.removeMacro(fifthMacro);
 
     assert.equal(
-      get(service, 'keyupMacros').length,
+      service.keyupMacros.length,
       0,
       'keyup macros should not be set'
     );
@@ -600,7 +598,7 @@ module('Unit | Service | key manager', function(hooks) {
     const service = this.owner.lookup('service:key-manager');
     service.addMacro({
       callback: function() {},
-      executionKey: 'a',
+      executionKey: 'A',
       modifierKeys: ['Control', 'Alt'],
       keyEvent: 'keyup',
     });

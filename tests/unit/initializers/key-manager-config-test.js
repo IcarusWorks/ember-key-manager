@@ -2,7 +2,6 @@ import Application from '@ember/application';
 import { run } from '@ember/runloop';
 import { initialize } from 'dummy/initializers/key-manager-config';
 import { module, test } from 'qunit';
-import destroyApp from '../../helpers/destroy-app';
 
 module('Unit | Initializer | key manager config', function(hooks) {
   hooks.beforeEach(function() {
@@ -13,7 +12,7 @@ module('Unit | Initializer | key manager config', function(hooks) {
   });
 
   hooks.afterEach(function() {
-    destroyApp(this.application);
+    run(this.application, 'destroy');
   });
 
   test('it registers the config', function(assert) {

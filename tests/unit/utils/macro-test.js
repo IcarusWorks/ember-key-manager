@@ -7,7 +7,7 @@ module('Unit | Utility | macro', function() {
   const mockAttrs = {
     callback: null,
     executionKey: 'a',
-    modifierKeys: ['shift', 'cmd'],
+    modifierKeys: ['Shift', 'Cmd'],
     priority: 100,
     type: 'keydown',
   }

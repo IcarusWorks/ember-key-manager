@@ -6,12 +6,9 @@ import { TO_MODIFIER, TO_KEY } from '../utils/modifier-keys';
 import {
   get,
   getProperties,
-  set,
   setProperties,
 } from '@ember/object';
-import {
-  filterBy,
-} from '@ember/object/computed';
+import { A } from '@ember/array';
 import { warn } from '@ember/debug';
 import { isPresent, } from '@ember/utils';
 import {
@@ -31,75 +28,78 @@ const isInputElement = (element) => {
   return isContentEditable || isInput;
 };
 
-export default Service.extend({
-  isDisabledOnInput: false, // Config option
+export default class KeyManagerService extends Service {
+  isDisabledOnInput = false; // Config option
+  macros = A();
 
-  keydownMacros: filterBy('macros', 'keyEvent', 'keydown'),
-  keyupMacros: filterBy('macros', 'keyEvent', 'keyup'),
-
-  init() {
-    this.macros = [];
+  constructor(...args) {
+    super(...args);
     this._registerConfigOptions();
-  },
+  }
+
+  get keydownMacros() {
+    return this.macros.filter(m => m.keyEvent === 'keydown');
+  }
+  get keyupMacros() {
+    return this.macros.filter(m => m.keyEvent === 'keyup');
+  }
 
   addMacro(options) {
     const macroAttrs = this._mergeConfigDefaults(options);
     const macro = Macro.create();
     macro.setup(macroAttrs);
 
-    const keyEvent = get(macro, 'keyEvent');
+    const keyEvent = macro.keyEvent;
     this._handleModifiersOnKeyup(macro, keyEvent);
-    const element = get(macro, 'element');
+    const element = macro.element;
     this._addEventListener(element, keyEvent);
 
-    const macros = this.macros;
-    macros.pushObject(macro);
+    this.macros.pushObject(macro);
 
     return macro;
-  },
+  }
 
   _handleModifiersOnKeyup({ modifierKeys }, keyEvent) {
     if (keyEvent === 'keyup' && isPresent(modifierKeys)) {
       warn(MODIFIERS_ON_KEYUP_WARNING, false, {id: 'keyup-with-modifiers'});
     }
-  },
+  }
 
   _mergeConfigDefaults(attrs) {
     const isDisabledOnInput = this.isDisabledOnInput;
     return assign({ isDisabledOnInput }, attrs);
-  },
+  }
 
   _addEventListener(element, keyEvent) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.addEventListener(keyEvent, this);
     }
-  },
+  }
 
   removeMacro(macro) {
-    const element = get(macro, 'element');
-    const keyEvent = get(macro, 'keyEvent');
-    const macros = this.macros;
+    const element = macro.element;
+    const keyEvent = macro.keyEvent;
 
-    macros.removeObject(macro);
+    this.macros.removeObject(macro);
 
     this._removeEventListenter(element, keyEvent);
-  },
+  }
 
   _removeEventListenter(element, keyEvent) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.removeEventListener(keyEvent, this);
     }
-  },
+  }
 
   disable(recipient) {
     this._setDisabledState(recipient, true);
-  },
+  }
 
   enable(recipient) {
     this._setDisabledState(recipient, false);
-  },
+  }
 
   handleEvent(event) {
     if (this.isDestroyed || this.isDestroying) {
@@ -123,7 +123,7 @@ export default Service.extend({
       const matchingMacros = this._findMatchingMacros(
         event.target,
         event.key,
-        eventModifierKeys,
+        A(eventModifierKeys),
         event.type
       );
 
@@ -132,26 +132,30 @@ export default Service.extend({
         event.stopPropagation();
 
         matchingMacros.forEach((matchingMacro) => {
-          const isDisabled = get(matchingMacro, 'isDisabled') ||
-            (get(matchingMacro, 'isDisabledOnInput') && isTargetInput);
+          const isDisabled = matchingMacro.isDisabled ||
+            (matchingMacro.isDisabledOnInput && isTargetInput);
 
           if (!isDisabled) {
-            get(matchingMacro, 'callback')(event);
+            matchingMacro.callback(event);
           }
         })
       }
     }
-  },
+  }
 
   _findMacroWithElementAndKeyEvent(eventElement, eventKeyEvent) {
-    return get(this, `${eventKeyEvent}Macros`).find((macro) => {
-      const element = get(macro, 'element');
+    const isKeydown = eventKeyEvent === 'keydown';
+    const macros = isKeydown ? this.keydownMacros : this.keyupMacros;
+    return macros.find((macro) => {
+      const element = macro.element;
       return eventElement === element;
     });
-  },
+  }
 
   _findMatchingMacros(eventElement, eventExecutionKey, eventModifierKeys, eventKeyEvent) {
-    const matchingMacros = get(this, `${eventKeyEvent}Macros`).filter((macro) => {
+    const isKeydown = eventKeyEvent === 'keydown';
+    const macros = isKeydown ? this.keydownMacros : this.keyupMacros;
+    const matchingMacros = macros.filter((macro) => {
       const {
         element,
         executionKey,
@@ -161,7 +165,7 @@ export default Service.extend({
       const hasExecutionKeyMatch = eventExecutionKey.toLowerCase() === executionKey.toLowerCase();
       const hasModifierKeysMatch = eventModifierKeys.removeObject(TO_MODIFIER[eventExecutionKey])
         .every((key) => {
-          return modifierKeys.toArray().map(k => k.capitalize()).includes(TO_KEY[key]);
+          return modifierKeys.map(k => k.capitalize()).includes(TO_KEY[key]);
         });
       const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 
@@ -171,11 +175,11 @@ export default Service.extend({
         hasModifierKeyCount;
     });
 
-    const highestPriority = matchingMacros.mapBy('priority')
+    const highestPriority = A(matchingMacros).mapBy('priority')
       .reduce((max, priority) => Math.max(max, priority), -Infinity);
 
-    return matchingMacros.filter((macro) => get(macro, 'priority') === highestPriority);
-  },
+    return matchingMacros.filter((macro) => macro.priority === highestPriority);
+  }
 
   _registerConfigOptions() {
     const config = getOwner(this).lookup('main:key-manager-config');
@@ -183,18 +187,18 @@ export default Service.extend({
     if (config) {
       setProperties(this, config);
     }
-  },
+  }
 
   _setDisabledState(recipient, isDisabled) {
     if (typeof recipient === 'string') {
       this._setGroupDisabledState(recipient, isDisabled);
     } else {
-      set(recipient, 'isDisabled', isDisabled);
+      recipient.isDisabled = isDisabled;
     }
-  },
+  }
 
   _setGroupDisabledState(groupName, isDisabled) {
     this.macros.filterBy('groupName', groupName)
       .setEach('isDisabled', isDisabled);
-  },
-});
+  }
+};
