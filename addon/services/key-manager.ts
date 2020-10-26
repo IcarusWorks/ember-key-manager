@@ -1,7 +1,6 @@
 import Service from '@ember/service';
 import { getOwner } from '@ember/application';
-import { assign } from '@ember/polyfills';
-import Macro from '../utils/macro';
+import Macro, { MacroOptions } from '../utils/macro';
 import { TO_MODIFIER, TO_KEY } from '../utils/modifier-keys';
 import {
   setProperties,
@@ -20,7 +19,7 @@ const inputElements = [
   'TEXTAREA',
 ];
 
-const isInputElement = (element) => {
+const isInputElement = (element: HTMLElement) => {
   const isContentEditable = element.isContentEditable;
   const isInput = inputElements.includes(element.tagName);
 
@@ -44,10 +43,9 @@ export default class KeyManagerService extends Service {
     this._registerConfigOptions();
   }
 
-  addMacro(options) {
-    const macroAttrs = this._mergeConfigDefaults(options);
-    const macro = Macro.create();
-    macro.setup(macroAttrs);
+  addMacro(options: MacroOptions) {
+    options = this._mergeConfigDefaults(options);
+    const macro = new Macro(options);
 
     const keyEvent = macro.keyEvent;
     this._handleModifiersOnKeyup(macro, keyEvent);
@@ -60,50 +58,48 @@ export default class KeyManagerService extends Service {
     return macro;
   }
 
-  _handleModifiersOnKeyup({ modifierKeys }, keyEvent) {
+  _handleModifiersOnKeyup({ modifierKeys }: Macro, keyEvent: string) {
     if (keyEvent === 'keyup' && isPresent(modifierKeys)) {
       warn(MODIFIERS_ON_KEYUP_WARNING, false, {id: 'keyup-with-modifiers'});
     }
   }
 
-  _mergeConfigDefaults(attrs) {
-    const isDisabledOnInput = this.isDisabledOnInput;
-    return assign({ isDisabledOnInput }, attrs);
+  _mergeConfigDefaults(options: MacroOptions) {
+    if (options.isDisabledOnInput == undefined) {
+      options.isDisabledOnInput = this.isDisabledOnInput;
+    }
+    return options;
   }
 
-  _addEventListener(element, keyEvent) {
+  _addEventListener(element: HTMLElement, keyEvent: string) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.addEventListener(keyEvent, this);
     }
   }
 
-  removeMacro(macro) {
-    const element = macro.element;
-    const keyEvent = macro.keyEvent;
-    const macros = this.macros;
+  removeMacro(macro: Macro) {
+    this.macros.removeObject(macro);
 
-    macros.removeObject(macro);
-
-    this._removeEventListenter(element, keyEvent);
+    this._removeEventListenter(macro.element, macro.keyEvent);
   }
 
-  _removeEventListenter(element, keyEvent) {
+  _removeEventListenter(element: HTMLElement, keyEvent: string) {
     const hasListenerForElementAndKeyEvent = this._findMacroWithElementAndKeyEvent(element, keyEvent);
     if (!hasListenerForElementAndKeyEvent) {
       element.removeEventListener(keyEvent, this);
     }
   }
 
-  disable(recipient) {
+  disable(recipient: any) {
     this._setDisabledState(recipient, true);
   }
 
-  enable(recipient) {
+  enable(recipient: any) {
     this._setDisabledState(recipient, false);
   }
 
-  handleEvent(event) {
+  handleEvent(event: KeyboardEvent) {
     if (this.isDestroyed || this.isDestroying) {
       return false;
     }
@@ -112,7 +108,7 @@ export default class KeyManagerService extends Service {
     const isKeyup = event.type === 'keyup';
 
     if (isKeydown || isKeyup) {
-      const allEventModifierKeys = {
+      const allEventModifierKeys: {[index: string]: boolean} = {
         altKey: event.altKey,
         ctrlKey: event.ctrlKey,
         metaKey: event.metaKey,
@@ -122,18 +118,19 @@ export default class KeyManagerService extends Service {
         .filter((key) => {
           return allEventModifierKeys[key] !== false;
         }));
-      const matchingMacros = this._findMatchingMacros(
-        event.target,
+      const targetIsElement = event.target instanceof HTMLElement;
+      const matchingMacros = targetIsElement ? this._findMatchingMacros(
+        event.target as HTMLElement,
         event.key || '',
         eventModifierKeys,
         event.type
-      );
+      ) : [];
 
       if (isPresent(matchingMacros)) {
-        const isTargetInput = isInputElement(event.target);
+        const isTargetInput = targetIsElement && isInputElement(event.target as HTMLElement);
         event.stopPropagation();
 
-        matchingMacros.forEach((matchingMacro) => {
+        matchingMacros.forEach((matchingMacro: Macro) => {
           const isDisabled = matchingMacro.isDisabled ||
             (matchingMacro.isDisabledOnInput && isTargetInput);
 
@@ -143,27 +140,29 @@ export default class KeyManagerService extends Service {
         })
       }
     }
+    return false;
   }
 
-  _findMacroWithElementAndKeyEvent(eventElement, eventKeyEvent) {
+  _findMacroWithElementAndKeyEvent(eventElement: HTMLElement, eventKeyEvent: string) {
     var events = eventKeyEvent === "keydown" ? this.keydownMacros : this.keyupMacros;
-    return events.find((macro) => {
+    return events.find((macro: Macro) => {
       const element = macro.element;
       return eventElement === element;
     });
   }
 
-  _findMatchingMacros(eventElement, eventExecutionKey, eventModifierKeys, eventKeyEvent) {
+  _findMatchingMacros(eventElement:HTMLElement, eventExecutionKey: string, eventModifierKeys: string[], eventKeyEvent: string) {
     var events = eventKeyEvent === "keydown" ? this.keydownMacros : this.keyupMacros;
-    const matchingMacros = events.filter((macro) => {
+    const matchingMacros = events.filter((macro: Macro) => {
       const element = macro.element;
       const executionKey = macro.executionKey;
       const modifierKeys = macro.modifierKeys;
       const hasElementMatch = element === eventElement || element.contains(eventElement);
       const hasExecutionKeyMatch = eventExecutionKey.toLowerCase() === executionKey.toLowerCase();
-      const hasModifierKeysMatch = eventModifierKeys.removeObject(TO_MODIFIER[eventExecutionKey])
-        .every((key) => {
-          return modifierKeys.toArray().map(k => capitalize(k)).includes(TO_KEY[key]);
+      const onlyModifierKeys = A(eventModifierKeys);
+      onlyModifierKeys.removeObject(TO_MODIFIER[eventExecutionKey]);
+       const hasModifierKeysMatch = onlyModifierKeys.every((key) => {
+          return modifierKeys.map(k => capitalize(k)).includes(TO_KEY[key]);
         });
       const hasModifierKeyCount = eventModifierKeys.length === modifierKeys.length;
 
@@ -176,7 +175,7 @@ export default class KeyManagerService extends Service {
     const highestPriority = A(matchingMacros).mapBy('priority')
       .reduce((max, priority) => Math.max(max, priority), -Infinity);
 
-    return matchingMacros.filter((macro) => macro.priority === highestPriority);
+    return matchingMacros.filter((macro: Macro) => macro.priority === highestPriority);
   }
 
   _registerConfigOptions() {
@@ -187,7 +186,7 @@ export default class KeyManagerService extends Service {
     }
   }
 
-  _setDisabledState(recipient, isDisabled) {
+  _setDisabledState(recipient: any, isDisabled: boolean) {
     if (typeof recipient === 'string') {
       this._setGroupDisabledState(recipient, isDisabled);
     } else {
@@ -195,7 +194,7 @@ export default class KeyManagerService extends Service {
     }
   }
 
-  _setGroupDisabledState(groupName, isDisabled) {
+  _setGroupDisabledState(groupName: string, isDisabled: boolean) {
     this.macros.filterBy('groupName', groupName)
       .setEach('isDisabled', isDisabled);
   }

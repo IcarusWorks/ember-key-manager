@@ -8,14 +8,14 @@ export const CTRL_KEY = 'Control';
 export const META_KEY = 'Meta';
 export const SHIFT_KEY = 'Shift';
 
-export const TO_MODIFIER = {
+export const TO_MODIFIER: {[index: string]: string} = {
   [ALT_KEY]: ALT_MODIFIER,
   [CTRL_KEY]: CTRL_MODIFIER,
   [META_KEY]: META_MODIFIER,
   [SHIFT_KEY]: SHIFT_MODIFIER,
 }
 
-export const TO_KEY = {
+export const TO_KEY: {[index: string]: string} = {
   [ALT_MODIFIER]: ALT_KEY,
   [CTRL_MODIFIER]: CTRL_KEY,
   [META_MODIFIER]: META_KEY,
