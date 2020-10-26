@@ -38,12 +38,12 @@ export default Controller.extend({
 
   actions: {
     addMacro({executionKey, modifierKeys, priority, keyEvent, groupName}) {
-      this.send('removeMacro', get(this, 'macro'));
+      this.send('removeMacro', this.macro);
       modifierKeys = isPresent(modifierKeys) ? modifierKeys.split(',') : [];
 
       let count = 0;
 
-      const macro = get(this, 'keyManager').addMacro({
+      const macro = this.keyManager.addMacro({
         callback: bind(this, function() {
           count++;
           set(this, 'callbackMessage', `Callback is invoked ${count} times.`);
@@ -61,7 +61,7 @@ export default Controller.extend({
 
     removeMacro(macro) {
       if (macro) {
-        get(this, 'keyManager').removeMacro(macro);
+        this.keyManager.removeMacro(macro);
         set(this, 'macro', null);
       }
     },

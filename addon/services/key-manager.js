@@ -52,7 +52,7 @@ export default Service.extend({
     const element = get(macro, 'element');
     this._addEventListener(element, keyEvent);
 
-    const macros = get(this, 'macros');
+    const macros = this.macros;
     macros.pushObject(macro);
 
     return macro;
@@ -65,7 +65,7 @@ export default Service.extend({
   },
 
   _mergeConfigDefaults(attrs) {
-    const isDisabledOnInput = get(this, 'isDisabledOnInput');
+    const isDisabledOnInput = this.isDisabledOnInput;
     return assign({ isDisabledOnInput }, attrs);
   },
 
@@ -79,7 +79,7 @@ export default Service.extend({
   removeMacro(macro) {
     const element = get(macro, 'element');
     const keyEvent = get(macro, 'keyEvent');
-    const macros = get(this, 'macros');
+    const macros = this.macros;
 
     macros.removeObject(macro);
 
@@ -102,7 +102,7 @@ export default Service.extend({
   },
 
   handleEvent(event) {
-    if (get(this, 'isDestroyed') || get(this, 'isDestroying')) {
+    if (this.isDestroyed || this.isDestroying) {
       return false;
     }
 
@@ -194,7 +194,7 @@ export default Service.extend({
   },
 
   _setGroupDisabledState(groupName, isDisabled) {
-    get(this, 'macros').filterBy('groupName', groupName)
+    this.macros.filterBy('groupName', groupName)
       .setEach('isDisabled', isDisabled);
   },
 });

@@ -4,23 +4,24 @@ import { initialize } from 'dummy/initializers/key-manager-config';
 import { module, test } from 'qunit';
 import destroyApp from '../../helpers/destroy-app';
 
-module('Unit | Initializer | key manager config', {
-  beforeEach() {
+module('Unit | Initializer | key manager config', function(hooks) {
+  hooks.beforeEach(function() {
     run(() => {
       this.application = Application.create();
       this.application.deferReadiness();
     });
-  },
-  afterEach() {
+  });
+
+  hooks.afterEach(function() {
     destroyApp(this.application);
-  },
-});
+  });
 
-test('it registers the config', function(assert) {
-  assert.expect(1);
+  test('it registers the config', function(assert) {
+    assert.expect(1);
 
-  initialize(this.application);
+    initialize(this.application);
 
-  const config = this.application.__container__.lookup('main:key-manager-config');
-  assert.ok(!!config, 'config is registered on the container.');
+    const config = this.application.__container__.lookup('main:key-manager-config');
+    assert.ok(!!config, 'config is registered on the container.');
+  });
 });
