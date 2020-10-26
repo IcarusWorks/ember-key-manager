@@ -31,7 +31,7 @@ A service for (un)binding keyboard `keyup` and `keydown` events.
 
 ## Usage
 
-Bind key event anywhere services are available e.g., routes, models, controllers, components.
+Bind key event anywhere services are available e.g., routes, models, controllers, components, or use the modifiers in a template.
 
 ### Config
 
@@ -176,7 +176,7 @@ export default Route.extend({
     },
   },
 
-  // The `callback` is called with the keyboard `event`.
+  // The `callback` is called with the KeyboardEvent `event`.
   _redirectToLaLaLand(event) {
     if (event) {
       event.preventDefault();
@@ -184,6 +184,33 @@ export default Route.extend({
     this.transitionTo('main.la-la-land');
   },
 });
+```
+And an example in a template:
+
+```hbs
+{{!-- components/my-component/template.hbs --}}
+{{!-- use the key-down or key-up modifier --}}
+{{!-- 
+  Everything is optional except the callback and the execution key.
+  Use the same options as on the key manager service addMacro() 
+--}}
+
+<div {{key-down "A" this._redirectToLaLaLand modifiers=(array "Ctrl" "Shift") priority=7}}/>
+```
+```js
+//components/my-component/component.js
+import Component from '@ember/component';
+import { action } from '@ember/object';
+
+export default class MyComponent extends Component {
+  @action
+  _redirectToLaLaLand(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    this.transitionTo('main.la-la-land');
+  }
+}
 ```
 
 
