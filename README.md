@@ -1,4 +1,5 @@
-# ember-key-manager
+ember-key-manager
+==============================================================================
 
 [![NPM release][npm-badge]][npm-badge-url]
 [![Build][travis-badge]][travis-badge-url]
@@ -14,21 +15,23 @@
 Compatibility
 ------------------------------------------------------------------------------
 
-* Ember.js v2.18 or above
+Ember Octane ready
+
+* Ember.js v3.16 or above
 * Ember CLI v2.13 or above
+* Node.js v10 or above
 
 Installation
 ------------------------------------------------------------------------------
 
 A service for (un)binding keyboard `keyup` and `keydown` events.
 
-## Installation
 
 * `ember install ember-key-manager`
 
 ## Usage
 
-Bind key event anywhere services are available e.g., routes, models, controllers, components.
+Bind key event anywhere services are available e.g., routes, models, controllers, components, or use the modifiers in a template.
 
 ### Config
 
@@ -173,7 +176,7 @@ export default Route.extend({
     },
   },
 
-  // The `callback` is called with the keyboard `event`.
+  // The `callback` is called with the KeyboardEvent `event`.
   _redirectToLaLaLand(event) {
     if (event) {
       event.preventDefault();
@@ -182,3 +185,60 @@ export default Route.extend({
   },
 });
 ```
+And an example in a template:
+
+```hbs
+{{!-- components/my-component/template.hbs --}}
+{{!-- use the key-down or key-up modifier --}}
+{{!-- 
+  Everything is optional except the callback and the execution key.
+  Use the same options as on the key manager service addMacro() 
+--}}
+
+<div {{key-down "A" this._redirectToLaLaLand modifiers=(array "Ctrl" "Shift") priority=7}}/>
+```
+```js
+//components/my-component/component.js
+import Component from '@ember/component';
+import { action } from '@ember/object';
+
+export default class MyComponent extends Component {
+  @action
+  _redirectToLaLaLand(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    this.transitionTo('main.la-la-land');
+  }
+}
+```
+
+
+## Developing
+
+### Running
+
+
+### Running Tests
+
+* `npm test` (Runs `ember try:each` to test your addon against multiple Ember versions)
+* `ember test`
+* `ember test --server`
+
+Installation
+------------------------------------------------------------------------------
+
+```
+ember install ember-key-manager
+```
+
+Contributing
+------------------------------------------------------------------------------
+
+See the [Contributing](CONTRIBUTING.md) guide for details.
+
+
+License
+------------------------------------------------------------------------------
+
+This project is licensed under the [MIT License](LICENSE.md).
