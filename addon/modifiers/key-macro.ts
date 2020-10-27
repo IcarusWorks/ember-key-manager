@@ -2,7 +2,7 @@ import Modifier, { ModifierArgs } from 'ember-modifier';
 import {inject as service} from '@ember/service';
 import {assert} from '@ember/debug';
 import { KeyEvent } from '@ember/test-helpers/dom/trigger-key-event';
-import KeyManagerService from 'dummy/services/key-manager';
+import KeyManagerService from 'ember-key-manager/services/key-manager';
 import { KeyMacroModifierCallback } from 'ember-key-manager/utils/callback';
 
 export type IKeyMacro = {} | null;
